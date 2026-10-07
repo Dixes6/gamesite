@@ -1,0 +1,108 @@
+from sqlalchemy import insert, select, and_
+
+from app.db.session import SessionDep
+from app.db.models.user import UsersModel, InventoryModel
+from app.db.models.transaction import TransactionModel
+
+BASE_XP = 5000
+XP_STEP = 500
+MAX_LEVEL = 100
+
+LEVEL_THRESHOLDS = [None, 0]
+
+current_xp = 0
+
+for level in range(2, MAX_LEVEL + 1):
+    step = BASE_XP + XP_STEP * (level - 2)
+    current_xp += step
+    LEVEL_THRESHOLDS.append(current_xp)
+
+async def add_xp(user_id: int, amount: int, session: SessionDep):
+    user = await session.get(UsersModel, user_id)
+
+    if user is None:
+        return
+
+    user.current_xp += amount
+
+    while user.level < MAX_LEVEL and user.current_xp >= LEVEL_THRESHOLDS[user.level + 1]:
+        user.level += 1
+
+    await session.commit()
+
+async def add_or_remove_rubies(user_id: int, amount: int, reason: str, session: SessionDep):
+    user = await session.get(UsersModel, user_id)
+
+    if user is None:
+        return
+
+    user.rubies += amount
+
+    await session.execute(
+        insert(TransactionModel)
+        .values({
+                "user_id": user_id,
+                "amount": amount,
+                "reason": reason,
+            })
+    )
+
+    await session.commit()
+
+async def check_level(user_id: int, need_level: int, session: SessionDep) -> bool:
+    user = await session.get(UsersModel, user_id)
+
+    if user is None:
+        return False
+
+    if user.level >= need_level:
+        return True
+    else:
+        return False
+
+async def add_item_to_inventory(user_id: int, shop_item_id: int, source: str, quantity: int, session: SessionDep):
+    result = await session.execute(
+        select(InventoryModel)
+        .where(and_(
+            InventoryModel.user_id == user_id,
+            InventoryModel.shop_item_id == shop_item_id,
+        ))
+    )
+
+    item = result.scalar_one_or_none()
+
+    if item is None:
+        item = InventoryModel(
+            user_id=user_id,
+            shop_item_id=shop_item_id,
+            source=source,
+            quantity=quantity,
+        )
+        session.add(item)
+    else:
+        item.quantity += quantity
+
+    await session.commit()
+
+async def change_avatar(user_id: int, shop_item_id: int, session: SessionDep):
+    result = await session.execute(
+        select(InventoryModel)
+        .where(and_(
+            InventoryModel.user_id == user_id,
+            InventoryModel.shop_item_id == shop_item_id,
+        ))
+    )
+
+    item = result.scalar_one_or_none()
+
+    if item is None:
+        return
+
+    user = await session.get(UsersModel, user_id)
+
+    if user is None:
+        return
+
+    user.avatar_id = item.shop_item_id
+
+    await session.commit()
