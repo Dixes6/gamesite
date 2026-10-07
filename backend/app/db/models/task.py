@@ -1,6 +1,6 @@
 from datetime import datetime
 from sqlalchemy import ForeignKey, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Model
 
@@ -15,6 +15,10 @@ class TaskTemplateModel(Model):
     reward_rubies: Mapped[int] = mapped_column(nullable=False)
     reward_xp: Mapped[int] = mapped_column(nullable=False)
 
+    user_tasks: Mapped[list["UserTaskModel"]] = relationship(
+        back_populates="task_template"
+    )
+
 class UserTaskModel(Model):
     __tablename__ = "user_task"
 
@@ -25,3 +29,7 @@ class UserTaskModel(Model):
     is_completed: Mapped[bool] = mapped_column(nullable=False)
     reward_claimed: Mapped[bool] = mapped_column(nullable=False)
     period_start: Mapped[datetime] = mapped_column(nullable=False, default=func.now)
+
+    task_template: Mapped["TaskTemplateModel"] = relationship(
+        back_populates="user_tasks"
+    )

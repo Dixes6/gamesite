@@ -36,7 +36,7 @@ async def open_case(user_id: int, case_id: int, session: SessionDep) -> int | st
 
     if user_result.level >= case.unlock_level and user_result.rubies >= case.price:
         await add_or_remove_rubies(user_id=user_id, amount=case.price, reason="case_open")
-        await register_task_event()
+        await register_task_event(user_id=user_id, condition_type="open_case")
 
         variants = [item.id for item in case_items]
         chances = [item.weight for item in case_items]
