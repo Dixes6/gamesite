@@ -18,24 +18,24 @@ async def gameplay(user_id: int, game_type: str, result_value: int, session: Ses
         reward = result_value*100
     elif game_type == "2048":
         reward = 0
+
+        REWARDS = {
+            128: 100,
+            256: 200,
+            512: 400,
+            1024: 800,
+            2048: 1600,
+            4096: 3200,
+        }
+
+        for tile in sorted(REWARDS.keys(), reverse=True):
+            if result_value >= tile:
+                reward = REWARDS[tile]
+                break
     else:
         return
 
-    REWARDS = {
-        128: 100,
-        256: 200,
-        512: 400,
-        1024: 800,
-        2048: 1600,
-        4096: 3200,
-    }
-
-    for tile in sorted(REWARDS.keys(), reverse=True):
-        if result_value >= tile:
-            reward = REWARDS[tile]
-            break
-
-    await add_or_remove_rubies(user_id=user_id, amount=reward, reason="game_reward")
+    await add_or_remove_rubies(user_id=user_id, amount=reward, reason="game_reward", session=session)
 
     result = [{
         "user_id": user_id,
@@ -49,7 +49,7 @@ async def gameplay(user_id: int, game_type: str, result_value: int, session: Ses
         .values(result)
     )
 
-    await register_task_event(user_id=user_id, condition_type="score_in_game", game_type=game_type, amount=result_value)
+    await register_task_event(user_id=user_id, condition_type="score_in_game", game_type=game_type, amount=result_value, session=session)
 
     await session.commit()
 

@@ -35,8 +35,8 @@ async def open_case(user_id: int, case_id: int, session: SessionDep) -> int | st
         return
 
     if user_result.level >= case.unlock_level and user_result.rubies >= case.price:
-        await add_or_remove_rubies(user_id=user_id, amount=case.price, reason="case_open")
-        await register_task_event(user_id=user_id, condition_type="open_case")
+        await add_or_remove_rubies(user_id=user_id, amount=case.price, reason="case_open", session=session)
+        await register_task_event(user_id=user_id, condition_type="open_case", session=session)
 
         variants = [item.id for item in case_items]
         chances = [item.weight for item in case_items]
@@ -49,16 +49,16 @@ async def open_case(user_id: int, case_id: int, session: SessionDep) -> int | st
             return
 
         if item_drop.item_type == "rubies":
-            await add_or_remove_rubies(user_id=user_id, amount=item_drop.value, reason="case_open")
+            await add_or_remove_rubies(user_id=user_id, amount=item_drop.value, reason="case_open", session=session)
             await session.commit()
             return f"{item_drop.value} ♦️"
         elif item_drop.item_type == "xp":
-            await add_xp(user_id=user_id, amount=item_drop.value)
+            await add_xp(user_id=user_id, amount=item_drop.value, session=session)
             await session.commit()
             return f"{item_drop.value} xp"
         elif item_drop.item_type == "shop_item":
             shop_item_id = item_drop.shop_item_id
-            await add_item_to_inventory(user_id=user_id, shop_item_id=shop_item_id, source="case", quantity=1)
+            await add_item_to_inventory(user_id=user_id, shop_item_id=shop_item_id, source="case", quantity=1, session=session)
             user_case_history = [{
                 "user_id": user_id,
                 "case_id": case_id,
