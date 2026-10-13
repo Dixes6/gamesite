@@ -9,8 +9,10 @@ class UsersModel(Model):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    username: Mapped[str] = mapped_column(nullable=False)
+    username: Mapped[str] = mapped_column(unique=True, nullable=False)
+    password_hash: Mapped[str] = mapped_column(nullable=False)
     avatar_id: Mapped[int | None] = mapped_column(ForeignKey("shop_item.id"),nullable=True)
+    frame_id: Mapped[int | None] = mapped_column(ForeignKey("shop_item.id"), nullable=True)
     level: Mapped[int] = mapped_column(nullable=False)
     current_xp: Mapped[int] = mapped_column(nullable=False)
     rubies: Mapped[int] = mapped_column(nullable=False)

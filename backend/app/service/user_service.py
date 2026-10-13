@@ -84,6 +84,30 @@ async def add_item_to_inventory(user_id: int, shop_item_id: int, source: str, qu
 
     await session.commit()
 
+async def remove_item_from_inventory(user_id: int, shop_item_id: int, quantity: int, session: SessionDep):
+    result = await session.execute(
+        select(InventoryModel)
+        .where(and_(
+            InventoryModel.user_id == user_id,
+            InventoryModel.shop_item_id == shop_item_id,
+        ))
+    )
+
+    item = result.scalar_one_or_none()
+
+    if item is None:
+        return
+
+    if item.quantity < quantity:
+        return
+
+    item.quantity -= quantity
+
+    if item.quantity <= 0:
+        await session.delete(item)
+
+    await session.commit()
+
 async def change_avatar(user_id: int, shop_item_id: int, session: SessionDep):
     result = await session.execute(
         select(InventoryModel)
@@ -104,5 +128,28 @@ async def change_avatar(user_id: int, shop_item_id: int, session: SessionDep):
         return
 
     user.avatar_id = item.shop_item_id
+
+    await session.commit()
+
+async def change_frame(user_id: int, shop_item_id: int, session: SessionDep):
+    result = await session.execute(
+        select(InventoryModel)
+        .where(and_(
+            InventoryModel.user_id == user_id,
+            InventoryModel.shop_item_id == shop_item_id,
+        ))
+    )
+
+    item = result.scalar_one_or_none()
+
+    if item is None:
+        return
+
+    user = await session.get(UsersModel, user_id)
+
+    if user is None:
+        return
+
+    user.frame_id = item.shop_item_id
 
     await session.commit()

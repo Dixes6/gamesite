@@ -9,6 +9,8 @@ class ShopItemModel(Model):
     name_key: Mapped[str] = mapped_column(nullable=False)
     type: Mapped[str] = mapped_column(nullable=False)
     price: Mapped[int | None] = mapped_column(nullable=True)
+    selling_price: Mapped[int | None] = mapped_column(nullable=True)
+    unlock_level: Mapped[int] = mapped_column(default=1)
     is_exclusive: Mapped[bool] = mapped_column(nullable=False)
     is_starter: Mapped[bool] = mapped_column(nullable=False)
     rarity: Mapped[str] = mapped_column(nullable=False)
