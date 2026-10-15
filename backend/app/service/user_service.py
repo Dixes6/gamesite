@@ -17,6 +17,16 @@ for level in range(2, MAX_LEVEL + 1):
     current_xp += step
     LEVEL_THRESHOLDS.append(current_xp)
 
+async def xp_to_next_level(user_id: int, session: SessionDep) -> int | None:
+    user = await session.get(UsersModel, user_id)
+
+    if user is None:
+        return
+
+    to_next_level = LEVEL_THRESHOLDS[user.level + 1] - user.current_xp
+
+    return to_next_level
+
 async def add_xp(user_id: int, amount: int, session: SessionDep):
     user = await session.get(UsersModel, user_id)
 

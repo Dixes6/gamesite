@@ -11,4 +11,4 @@ class TransactionModel(Model):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete='CASCADE'), nullable=False)
     amount: Mapped[int] = mapped_column(nullable=False)
     reason: Mapped[str] = mapped_column(nullable=False)
-    created_at: Mapped[datetime] = mapped_column(nullable=False, default=func.now)
+    created_at: Mapped[datetime] = mapped_column(nullable=False, default=func.now())

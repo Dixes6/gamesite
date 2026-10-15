@@ -16,7 +16,7 @@ class UsersModel(Model):
     level: Mapped[int] = mapped_column(nullable=False)
     current_xp: Mapped[int] = mapped_column(nullable=False)
     rubies: Mapped[int] = mapped_column(nullable=False)
-    created_at: Mapped[datetime] = mapped_column(nullable=False, default=func.now)
+    created_at: Mapped[datetime] = mapped_column(nullable=False, default=func.now())
 
     __table_args__ = (
         CheckConstraint("level BETWEEN 1 AND 100", name="check_level"),
@@ -32,7 +32,7 @@ class InventoryModel(Model):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete='CASCADE'), nullable=False)
     shop_item_id: Mapped[int] = mapped_column(ForeignKey("shop_item.id"), nullable=False)
     source: Mapped[str] = mapped_column(nullable=False)
-    obtained_at: Mapped[datetime] = mapped_column(nullable=False, default=func.now)
+    obtained_at: Mapped[datetime] = mapped_column(nullable=False, default=func.now())
     quantity: Mapped[int] = mapped_column(nullable=False)
 
     __table_args__ = (

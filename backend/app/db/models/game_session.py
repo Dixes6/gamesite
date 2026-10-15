@@ -12,4 +12,4 @@ class GameSessionModel(Model):
     game_type: Mapped[str] = mapped_column(nullable=False)
     score: Mapped[int] = mapped_column(nullable=False)
     rubies_earned: Mapped[int] = mapped_column(nullable=False)
-    played_at: Mapped[datetime] = mapped_column(nullable=False, default=func.now)
+    played_at: Mapped[datetime] = mapped_column(nullable=False, default=func.now())

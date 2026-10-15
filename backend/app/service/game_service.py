@@ -1,4 +1,5 @@
 from sqlalchemy import insert
+from fastapi import APIRouter, status, HTTPException
 
 from app.db.session import SessionDep
 from app.db.models.user import UsersModel
@@ -10,7 +11,7 @@ async def gameplay(user_id: int, game_type: str, result_value: int, session: Ses
     user = await session.get(UsersModel, user_id)
 
     if user is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
 
     if game_type == "clicker":
         reward = result_value
@@ -33,7 +34,7 @@ async def gameplay(user_id: int, game_type: str, result_value: int, session: Ses
                 reward = REWARDS[tile]
                 break
     else:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Такой игры не существует")
 
     await add_or_remove_rubies(user_id=user_id, amount=reward, reason="game_reward", session=session)
 

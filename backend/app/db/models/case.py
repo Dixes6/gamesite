@@ -29,4 +29,4 @@ class UserCaseHistoryModel(Model):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete='CASCADE'), nullable=False)
     case_id: Mapped[int] = mapped_column(ForeignKey("case.id"), nullable=False)
     case_item_id: Mapped[int] = mapped_column(ForeignKey("case_item.id"), nullable=False)
-    opened_at: Mapped[datetime] = mapped_column(nullable=False, default=func.now)
+    opened_at: Mapped[datetime] = mapped_column(nullable=False, default=func.now())
