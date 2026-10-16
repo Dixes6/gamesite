@@ -1,7 +1,8 @@
 from datetime import datetime
 from sqlalchemy import ForeignKey, func, CheckConstraint
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.db.models.shop import ShopItemModel
 from app.db.base import Model
 
 
@@ -34,6 +35,10 @@ class InventoryModel(Model):
     source: Mapped[str] = mapped_column(nullable=False)
     obtained_at: Mapped[datetime] = mapped_column(nullable=False, default=func.now())
     quantity: Mapped[int] = mapped_column(nullable=False)
+
+    shop_item: Mapped["ShopItemModel"] = relationship(
+        back_populates="inventory_items"
+    )
 
     __table_args__ = (
         CheckConstraint("quantity >= 0", name="check_quantity"),

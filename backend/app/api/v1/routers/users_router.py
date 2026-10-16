@@ -1,9 +1,9 @@
 from fastapi import APIRouter, status
 
-from app.schemas.users_schemas import SUserResponse
+from app.schemas.users_schemas import SUserResponse, SUserInventoryResponse
 from app.db.session import SessionDep
 from app.api.v1.deps import get_current_user
-from app.service.user_service import xp_to_next_level
+from app.service.user_service import xp_to_next_level, get_inventory_user_service
 
 router = APIRouter(prefix="/main", tags=["Главное меню"])
 
@@ -20,5 +20,6 @@ async def user(session: SessionDep, user_id: int) -> SUserResponse:
         rubies = user.rubies,
     )
 
-
-
+@router.get("/{user_id}/inventory", response_model=list[SUserInventoryResponse], status_code=status.HTTP_200_OK)
+async def get_user_inventory(session: SessionDep, user_id: int):
+    return await get_inventory_user_service(user_id, session)

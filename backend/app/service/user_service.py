@@ -1,6 +1,8 @@
 from sqlalchemy import insert, select, and_
+from sqlalchemy.orm import selectinload
 from fastapi import status, HTTPException
 
+from app.db.models import ShopItemModel
 from app.db.session import SessionDep
 from app.db.models.user import UsersModel, InventoryModel
 from app.db.models.transaction import TransactionModel
@@ -164,3 +166,32 @@ async def change_frame(user_id: int, shop_item_id: int, session: SessionDep):
     user.frame_id = item.shop_item_id
 
     await session.commit()
+
+async def get_inventory_user_service(user_id: int, session: SessionDep):
+    user = await session.get(UsersModel, user_id)
+
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
+
+    user_inventory_stmt = await session.execute(
+        select(InventoryModel)
+        .join(InventoryModel.shop_item)
+        .options(selectinload(InventoryModel.shop_item))
+        .where(
+            InventoryModel.user_id == user_id
+        )
+    )
+    user_inventory = user_inventory_stmt.scalars().all()
+
+    return [
+        {
+            "name_key": item.shop_item.name_key,
+            "selling_price": item.shop_item.selling_price,
+            "is_exclusive": item.shop_item.is_exclusive,
+            "is_starter": item.shop_item.is_starter,
+            "rarity": item.shop_item.rarity,
+            "obtained_at": item.obtained_at,
+            "quantity": item.quantity,
+        }
+        for item in user_inventory
+    ]

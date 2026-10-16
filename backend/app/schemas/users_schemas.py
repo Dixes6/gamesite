@@ -1,4 +1,5 @@
 from pydantic import BaseModel, ConfigDict
+from datetime import datetime
 
 class SUserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -10,3 +11,14 @@ class SUserResponse(BaseModel):
     current_xp: int
     xp_to_next_level: int
     rubies: int
+
+class SUserInventoryResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    name_key: str
+    selling_price: int | None = None
+    is_exclusive: bool
+    is_starter: bool
+    rarity: str
+    obtained_at: datetime
+    quantity: int
