@@ -1,4 +1,5 @@
 from sqlalchemy import insert, select, and_
+from fastapi import status, HTTPException
 
 from app.db.session import SessionDep
 from app.db.models.user import UsersModel, InventoryModel
@@ -21,7 +22,7 @@ async def xp_to_next_level(user_id: int, session: SessionDep) -> int | None:
     user = await session.get(UsersModel, user_id)
 
     if user is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
 
     to_next_level = LEVEL_THRESHOLDS[user.level + 1] - user.current_xp
 
@@ -31,7 +32,7 @@ async def add_xp(user_id: int, amount: int, session: SessionDep):
     user = await session.get(UsersModel, user_id)
 
     if user is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
 
     user.current_xp += amount
 
@@ -44,7 +45,7 @@ async def add_or_remove_rubies(user_id: int, amount: int, reason: str, session: 
     user = await session.get(UsersModel, user_id)
 
     if user is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
 
     user.rubies += amount
 
@@ -63,7 +64,7 @@ async def check_level(user_id: int, need_level: int, session: SessionDep) -> boo
     user = await session.get(UsersModel, user_id)
 
     if user is None:
-        return False
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
 
     if user.level >= need_level:
         return True
@@ -106,10 +107,10 @@ async def remove_item_from_inventory(user_id: int, shop_item_id: int, quantity: 
     item = result.scalar_one_or_none()
 
     if item is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Предмет не найден")
 
     if item.quantity < quantity:
-        return
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Нельзя продать предмет")
 
     item.quantity -= quantity
 
@@ -130,12 +131,12 @@ async def change_avatar(user_id: int, shop_item_id: int, session: SessionDep):
     item = result.scalar_one_or_none()
 
     if item is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Предмет не найден")
 
     user = await session.get(UsersModel, user_id)
 
     if user is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
 
     user.avatar_id = item.shop_item_id
 
@@ -153,12 +154,12 @@ async def change_frame(user_id: int, shop_item_id: int, session: SessionDep):
     item = result.scalar_one_or_none()
 
     if item is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Предмет не найден")
 
     user = await session.get(UsersModel, user_id)
 
     if user is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
 
     user.frame_id = item.shop_item_id
 

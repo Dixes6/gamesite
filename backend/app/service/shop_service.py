@@ -1,15 +1,16 @@
-from sqlalchemy import select, and_, case, insert
+from sqlalchemy import select
+from fastapi import status, HTTPException
 
 from app.db.session import SessionDep
 from app.db.models.user import UsersModel, InventoryModel
 from app.db.models.shop import ShopItemModel
 from app.service.user_service import add_or_remove_rubies, add_item_to_inventory, remove_item_from_inventory
 
-async def get_shop_items(user_id: int, session: SessionDep) -> tuple[list, list] | None:
+async def get_shop_items(user_id: int, session: SessionDep) -> dict | None:
     user = await session.get(UsersModel, user_id)
 
     if user is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
 
     user_lvl = user.level
 
@@ -19,20 +20,23 @@ async def get_shop_items(user_id: int, session: SessionDep) -> tuple[list, list]
     available = list(available_stmt.scalars())
     unavailable = list(unavailable_stmt.scalars())
 
-    return available, unavailable
+    return {
+        "available": available,
+        "unavailable": unavailable,
+    }
 
 async def buy_item(user_id: int, shop_item_id: int, session: SessionDep):
     user = await session.get(UsersModel, user_id)
 
     if user is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
 
     item = await session.get(ShopItemModel, shop_item_id)
 
     if item is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Предмет не найден")
     if item.price is None:
-        return
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Нету цены")
 
     if (
         item.unlock_level <= user.level and
@@ -40,33 +44,40 @@ async def buy_item(user_id: int, shop_item_id: int, session: SessionDep):
         not item.is_exclusive
     ):
         if user.rubies < item.price:
-            return
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Недостаточно средств")
         await add_or_remove_rubies(user_id=user_id, amount=-item.price, reason="shop_purchase", session=session)
         await add_item_to_inventory(user_id=user_id, shop_item_id=shop_item_id, source="purchase", quantity=1, session=session)
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Вы не можете открыть этот кейс")
 
     await session.commit()
+    return {
+        "name_key": item.name_key,
+        "type": item.type,
+        "rarity": item.rarity,
+    }
 
 async def sell_item(user_id: int, inventory_item_id: int, session: SessionDep):
     user = await session.get(UsersModel, user_id)
 
     if user is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
 
     item = await session.get(InventoryModel, inventory_item_id)
 
     if item is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Предмет не найден")
 
     shop_item = await session.get(ShopItemModel, item.shop_item_id)
 
     if shop_item is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Предмет магазина не найден")
 
     if shop_item.selling_price == None:
-        return
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Нету цены")
 
     if item.quantity <= 1 and (user.avatar_id == item.shop_item_id or user.frame_id == item.shop_item_id):
-        return
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Невозможно продать предмет")
 
     await remove_item_from_inventory(user_id=user_id, shop_item_id=item.shop_item_id, quantity=1, session=session)
     await add_or_remove_rubies(user_id=user_id, amount=shop_item.selling_price, reason="shop_sale", session=session)

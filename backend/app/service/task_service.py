@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from sqlalchemy import select, and_, case, insert
 from sqlalchemy.orm import selectinload, joinedload
+from fastapi import status, HTTPException
 import random
 
 from app.db.session import SessionDep
@@ -18,7 +19,7 @@ async def register_task_event(
     user = await session.get(UsersModel, user_id)
 
     if user is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
 
     now = datetime.now()
 
@@ -49,7 +50,7 @@ async def register_task_event(
     tasks = list(tasks_stmt.scalars())
 
     if not tasks:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Задание не найдено")
 
     for task in tasks:
         if game_type is not None:
@@ -68,7 +69,7 @@ async def claim_reward(user_id: int, user_task_id: int, session: SessionDep) -> 
     user = await session.get(UsersModel, user_id)
 
     if user is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
 
     task_stmt = await session.execute(
         select(UserTaskModel)
@@ -84,7 +85,7 @@ async def claim_reward(user_id: int, user_task_id: int, session: SessionDep) -> 
     task = task_stmt.scalar_one_or_none()
 
     if task is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Задание не найдено")
 
     if task.is_completed == True and task.reward_claimed == False:
         amount_xp = task.task_template.reward_xp
@@ -95,7 +96,7 @@ async def claim_reward(user_id: int, user_task_id: int, session: SessionDep) -> 
         await session.commit()
         return amount_xp, amount_rubies
     else:
-        return
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Нельзя забрать награду")
 
 async def generate_tasks(period: str, session: SessionDep):
     tasks_stmt = await session.execute(
@@ -106,7 +107,7 @@ async def generate_tasks(period: str, session: SessionDep):
     tasks = list(tasks_stmt.scalars())
 
     if not tasks:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Задание не найдено")
 
     tasks_len = len(tasks)
     list_task_id = []
@@ -147,7 +148,7 @@ async def generate_tasks(period: str, session: SessionDep):
     users = list(users_stmt.scalars())
 
     if not users:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
 
     user_task = []
 

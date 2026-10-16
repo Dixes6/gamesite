@@ -1,5 +1,5 @@
 from sqlalchemy import insert
-from fastapi import APIRouter, status, HTTPException
+from fastapi import status, HTTPException
 
 from app.db.session import SessionDep
 from app.db.models.user import UsersModel

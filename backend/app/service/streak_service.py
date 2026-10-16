@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
+from fastapi import status, HTTPException
 
 from app.db.session import SessionDep
 from app.db.models.user import UsersModel, StreakModel
@@ -21,7 +22,7 @@ async def claim_reward(user_id: int, session: SessionDep) -> int | None:
     user = await session.get(UsersModel, user_id)
 
     if user is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
 
     streak_stmt = await session.execute(
         select(StreakModel)
@@ -31,12 +32,12 @@ async def claim_reward(user_id: int, session: SessionDep) -> int | None:
     streak = streak_stmt.scalar_one_or_none()
 
     if streak is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Не найден стрик для пользователя")
 
     if datetime.now(ZoneInfo("Europe/Moscow")) - streak.last_claim_date >= timedelta(days=1):
         streak.current_streak += 1
     else:
-        return
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Невозможно продлить стрик")
 
     if streak.current_streak > streak.best_streak:
         streak.best_streak = streak.current_streak
@@ -56,7 +57,7 @@ async def streak_status(user_id: int, session: SessionDep) -> tuple[int, datetim
     user = await session.get(UsersModel, user_id)
 
     if user is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
 
     streak_stmt = await session.execute(
         select(StreakModel)
@@ -66,7 +67,7 @@ async def streak_status(user_id: int, session: SessionDep) -> tuple[int, datetim
     streak = streak_stmt.scalar_one_or_none()
 
     if streak is None:
-        return
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Не найден стрик для пользователя")
 
     if datetime.now(ZoneInfo("Europe/Moscow")) - streak.last_claim_date >= timedelta(days=2):
         streak.current_streak = 0
