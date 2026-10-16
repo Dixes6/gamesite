@@ -9,6 +9,96 @@ from app.db.models.user import UsersModel
 from app.db.models.task import UserTaskModel, TaskTemplateModel
 from app.service.user_service import add_xp, add_or_remove_rubies
 
+async def get_user_task_service(user_id: int, session: SessionDep) -> dict:
+    user = await session.get(UsersModel, user_id)
+
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
+
+    now = datetime.now()
+    start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    start_of_week = start_of_day - timedelta(days=start_of_day.weekday())
+    start_of_month = start_of_day.replace(day=1)
+
+    completed_stmt = await session.execute(
+        select(UserTaskModel)
+        .join(UserTaskModel.task_template)
+        .options(selectinload(UserTaskModel.task_template))
+        .where(
+            UserTaskModel.user_id == user_id,
+            UserTaskModel.is_completed == True,
+            UserTaskModel.reward_claimed == False,
+        )
+    )
+
+    unfulfilled_stmt = await session.execute(
+        select(UserTaskModel)
+        .join(UserTaskModel.task_template)
+        .options(selectinload(UserTaskModel.task_template))
+        .where(
+            UserTaskModel.user_id == user_id,
+            UserTaskModel.is_completed == False,
+            UserTaskModel.reward_claimed == False,
+        )
+    )
+
+    completed_tasks = completed_stmt.scalars().all()
+    filtered_completed = []
+
+    for task in completed_tasks:
+        period = task.task_template.period
+
+        if period == "day" and task.period_start >= start_of_day:
+            filtered_completed.append(task)
+        elif period == "week" and task.period_start >= start_of_week:
+            filtered_completed.append(task)
+        elif period == "month" and task.period_start >= start_of_month:
+            filtered_completed.append(task)
+
+    unfulfilled_tasks = unfulfilled_stmt.scalars().all()
+    filtered_unfulfilled = []
+
+    for task in unfulfilled_tasks:
+        period = task.task_template.period
+
+        if period == "day" and task.period_start >= start_of_day:
+            filtered_unfulfilled.append(task)
+        elif period == "week" and task.period_start >= start_of_week:
+            filtered_unfulfilled.append(task)
+        elif period == "month" and task.period_start >= start_of_month:
+            filtered_unfulfilled.append(task)
+
+    completed = [
+        {
+            "id": task.id,
+            "task_template_id": task.task_template_id,
+            "progress": task.progress,
+            "target_value": task.task_template.target_value,
+            "reward_rubies": task.task_template.reward_rubies,
+            "reward_xp": task.task_template.reward_xp,
+            "is_completed": task.is_completed,
+        }
+        for task in filtered_completed
+    ]
+
+    unfulfilled = [
+        {
+            "id": task.id,
+            "task_template_id": task.task_template_id,
+            "progress": task.progress,
+            "target_value": task.task_template.target_value,
+            "reward_rubies": task.task_template.reward_rubies,
+            "reward_xp": task.task_template.reward_xp,
+            "is_completed": task.is_completed,
+        }
+        for task in filtered_unfulfilled
+    ]
+
+    return {
+        "completed": completed,
+        "unfulfilled": unfulfilled,
+    }
+
 async def register_task_event(
         user_id: int,
         condition_type: str,
@@ -29,20 +119,13 @@ async def register_task_event(
 
     tasks_stmt = await session.execute(
         select(UserTaskModel)
+        .join(UserTaskModel.task_template)
         .options(selectinload(UserTaskModel.task_template))
         .where(
             and_(
                 UserTaskModel.user_id == user_id,
                 UserTaskModel.is_completed == False,
-                UserTaskModel.task_template.has(
-                    TaskTemplateModel.condition_type == condition_type
-                ),
-
-                UserTaskModel.period_start >= case(
-                    (TaskTemplateModel.period == "day", start_of_day),
-                    (TaskTemplateModel.period == "week", start_of_week),
-                    (TaskTemplateModel.period == "month", start_of_month),
-                ),
+                TaskTemplateModel.condition_type == condition_type,
             )
         )
     )
@@ -50,11 +133,25 @@ async def register_task_event(
     tasks = list(tasks_stmt.scalars())
 
     if not tasks:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Задание не найдено")
+        return
 
+    filtered_tasks = []
     for task in tasks:
+        period = task.task_template.period
+
+        if period == "day" and task.period_start >= start_of_day:
+            filtered_tasks.append(task)
+        elif period == "week" and task.period_start >= start_of_week:
+            filtered_tasks.append(task)
+        elif period == "month" and task.period_start >= start_of_month:
+            filtered_tasks.append(task)
+
+    if not filtered_tasks:
+        return
+
+    for task in filtered_tasks:
         if game_type is not None:
-            if task.task_template.game_type != game_type:
+            if task.task_template.game_type:
                 continue
 
         task.progress += amount
@@ -65,7 +162,7 @@ async def register_task_event(
 
     await session.commit()
 
-async def claim_reward(user_id: int, user_task_id: int, session: SessionDep) -> int | None:
+async def claim_reward_service(user_id: int, user_task_id: int, session: SessionDep) -> tuple(int, int):
     user = await session.get(UsersModel, user_id)
 
     if user is None:
@@ -94,7 +191,10 @@ async def claim_reward(user_id: int, user_task_id: int, session: SessionDep) -> 
         await add_or_remove_rubies(user_id=user_id, amount=amount_rubies, reason="task_reward", session=session)
         task.reward_claimed = True
         await session.commit()
-        return amount_xp, amount_rubies
+        return {
+            "amount_xp": amount_xp,
+            "amount_rubies": amount_rubies,
+        }
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Нельзя забрать награду")
 
