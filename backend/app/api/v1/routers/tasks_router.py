@@ -6,7 +6,7 @@ from app.schemas.tasks_schemas import SUserTasksResponse, SClaimRewardResponse
 
 router = APIRouter(prefix="/tasks", tags=["Задания"])
 
-@router.get("{user_id}", response_model=SUserTasksResponse, status_code=status.HTTP_200_OK)
+@router.get("/{user_id}", response_model=SUserTasksResponse, status_code=status.HTTP_200_OK)
 async def get_user_tasks(session: SessionDep, user_id: int):
     return await get_user_task_service(user_id, session)
 

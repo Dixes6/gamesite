@@ -18,7 +18,7 @@ REWARDS = {
     7: 1600
 }
 
-async def claim_reward(user_id: int, session: SessionDep) -> int | None:
+async def claim_reward(user_id: int, session: SessionDep) -> dict:
     user = await session.get(UsersModel, user_id)
 
     if user is None:
@@ -34,10 +34,10 @@ async def claim_reward(user_id: int, session: SessionDep) -> int | None:
     if streak is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Не найден стрик для пользователя")
 
-    if datetime.now(ZoneInfo("Europe/Moscow")) - streak.last_claim_date >= timedelta(days=1):
+    if datetime.now(ZoneInfo("Europe/Moscow")).replace(tzinfo=None) - streak.last_claim_date >= timedelta(days=1):
         streak.current_streak += 1
     else:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Невозможно продлить стрик")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Невозможно продлить стрик, не прошло 24 часа")
 
     if streak.current_streak > streak.best_streak:
         streak.best_streak = streak.current_streak
@@ -48,12 +48,12 @@ async def claim_reward(user_id: int, session: SessionDep) -> int | None:
 
     await add_or_remove_rubies(user_id=user_id, amount=amount, reason="streak_bonus", session=session)
 
-    streak.last_claim_date = datetime.now(ZoneInfo("Europe/Moscow"))
+    streak.last_claim_date = datetime.now(ZoneInfo("Europe/Moscow")).replace(tzinfo=None)
 
     await session.commit()
-    return amount
+    return {"amount_rubies": amount}
 
-async def streak_status(user_id: int, session: SessionDep) -> tuple[int, datetime] | None:
+async def streak_status(user_id: int, session: SessionDep) -> dict:
     user = await session.get(UsersModel, user_id)
 
     if user is None:
@@ -69,8 +69,11 @@ async def streak_status(user_id: int, session: SessionDep) -> tuple[int, datetim
     if streak is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Не найден стрик для пользователя")
 
-    if datetime.now(ZoneInfo("Europe/Moscow")) - streak.last_claim_date >= timedelta(days=2):
+    if datetime.now(ZoneInfo("Europe/Moscow")).replace(tzinfo=None) - streak.last_claim_date >= timedelta(days=2):
         streak.current_streak = 0
 
     await session.commit()
-    return streak.current_streak, streak.last_claim_date
+    return {
+        "current_streak": streak.current_streak,
+        "last_claim_date": streak.last_claim_date,
+    }

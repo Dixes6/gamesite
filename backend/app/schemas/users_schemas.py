@@ -11,6 +11,8 @@ class SUserResponse(BaseModel):
     current_xp: int
     xp_to_next_level: int
     rubies: int
+    current_streak: int
+    last_claim_date: datetime
 
 class SUserInventoryResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -22,3 +24,6 @@ class SUserInventoryResponse(BaseModel):
     rarity: str
     obtained_at: datetime
     quantity: int
+
+class SRewardStreakResponse(BaseModel):
+    amount_rubies: int
