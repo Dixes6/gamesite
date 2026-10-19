@@ -1,3 +1,4 @@
+from typing import Literal
 from sqlalchemy import insert, select, and_
 from sqlalchemy.orm import selectinload
 from fastapi import status, HTTPException
@@ -121,7 +122,7 @@ async def remove_item_from_inventory(user_id: int, shop_item_id: int, quantity: 
 
     await session.commit()
 
-async def change_avatar(user_id: int, shop_item_id: int, session: SessionDep):
+async def change_avatar_service(user_id: int, shop_item_id: int, session: SessionDep):
     result = await session.execute(
         select(InventoryModel)
         .where(and_(
@@ -144,7 +145,7 @@ async def change_avatar(user_id: int, shop_item_id: int, session: SessionDep):
 
     await session.commit()
 
-async def change_frame(user_id: int, shop_item_id: int, session: SessionDep):
+async def change_frame_service(user_id: int, shop_item_id: int, session: SessionDep):
     result = await session.execute(
         select(InventoryModel)
         .where(and_(
@@ -185,13 +186,44 @@ async def get_inventory_user_service(user_id: int, session: SessionDep):
 
     return [
         {
+            "shop_item_id": item.shop_item_id,
             "name_key": item.shop_item.name_key,
+            "type": item.shop_item.type,
             "selling_price": item.shop_item.selling_price,
             "is_exclusive": item.shop_item.is_exclusive,
             "is_starter": item.shop_item.is_starter,
             "rarity": item.shop_item.rarity,
             "obtained_at": item.obtained_at,
             "quantity": item.quantity,
+        }
+        for item in user_inventory
+    ]
+
+async def get_avatar_or_frame_user_service(user_id: int, item_type: Literal["avatar", "frame"], session: SessionDep):
+    user = await session.get(UsersModel, user_id)
+
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
+
+    user_inventory_stmt = await session.execute(
+        select(InventoryModel)
+        .join(ShopItemModel, InventoryModel.shop_item_id == ShopItemModel.id)
+        .options(selectinload(InventoryModel.shop_item))
+        .where(
+            InventoryModel.user_id == user_id,
+            ShopItemModel.type == item_type,
+        )
+    )
+    user_inventory = user_inventory_stmt.scalars().all()
+
+    return [
+        {
+            "shop_item_id": item.shop_item_id,
+            "name_key": item.shop_item.name_key,
+            "type": item.shop_item.type,
+            "is_exclusive": item.shop_item.is_exclusive,
+            "is_starter": item.shop_item.is_starter,
+            "rarity": item.shop_item.rarity,
         }
         for item in user_inventory
     ]

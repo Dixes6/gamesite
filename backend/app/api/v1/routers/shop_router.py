@@ -10,6 +10,10 @@ router = APIRouter(prefix="/shop", tags=["Магазин"])
 async def get_shop(session: SessionDep, user_id: int):
     return await get_shop_items(user_id, session)
 
-@router.post("/{user_id}/{shop_item_id}", response_model=SShopBuyResponse, status_code=status.HTTP_201_CREATED)
-async def buy_shop_item(session: SessionDep, user_id: int, shop_item_id: int):
+@router.post("/{user_id}/buy/{shop_item_id}", response_model=SShopBuyResponse, status_code=status.HTTP_201_CREATED)
+async def buy_in_shop_item(session: SessionDep, user_id: int, shop_item_id: int):
     return await buy_item(user_id, shop_item_id, session)
+
+@router.post("/{user_id}/sell/shop_item_id}")
+async def sell_in_shop_item():
+    pass

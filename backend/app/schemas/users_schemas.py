@@ -17,7 +17,9 @@ class SUserResponse(BaseModel):
 class SUserInventoryResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    shop_item_id: int
     name_key: str
+    type: str
     selling_price: int | None = None
     is_exclusive: bool
     is_starter: bool
@@ -27,3 +29,12 @@ class SUserInventoryResponse(BaseModel):
 
 class SRewardStreakResponse(BaseModel):
     amount_rubies: int
+
+
+class SUserAvatarOrFrameResponse(BaseModel):
+    shop_item_id: int
+    name_key: str
+    type: str
+    is_exclusive: bool
+    is_starter: bool
+    rarity: str

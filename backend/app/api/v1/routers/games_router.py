@@ -20,7 +20,7 @@ async def games():
     }
 
 @router.post("/{game_type}", response_model=SGamesResponse, status_code=status.HTTP_201_CREATED)
-async def reward_clicker(data: SGamesRequest, game_type: str, session: SessionDep):
+async def reward_game(data: SGamesRequest, game_type: str, session: SessionDep):
     game_reward = await gameplay(data.user_id, game_type, data.result_value, session)
     return SGamesResponse(
         result_value=data.result_value,

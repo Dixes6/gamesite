@@ -1,9 +1,9 @@
 from fastapi import APIRouter, status
 
-from app.schemas.users_schemas import SUserResponse, SUserInventoryResponse, SRewardStreakResponse
+from app.schemas.users_schemas import SUserResponse, SUserInventoryResponse, SRewardStreakResponse, SUserAvatarOrFrameResponse
 from app.db.session import SessionDep
 from app.api.v1.deps import get_current_user
-from app.service.user_service import xp_to_next_level, get_inventory_user_service
+from app.service.user_service import xp_to_next_level, get_inventory_user_service, get_avatar_or_frame_user_service, change_avatar_service, change_frame_service
 from app.service.streak_service import streak_status, claim_reward
 
 router = APIRouter(prefix="/main", tags=["Главное меню"])
@@ -31,3 +31,21 @@ async def streak_claim_reward(session: SessionDep, user_id: int):
 @router.get("/{user_id}/inventory", response_model=list[SUserInventoryResponse], status_code=status.HTTP_200_OK)
 async def get_user_inventory(session: SessionDep, user_id: int):
     return await get_inventory_user_service(user_id, session)
+
+@router.get("/{user_id}/avatar", response_model=list[SUserAvatarOrFrameResponse], status_code=status.HTTP_200_OK)
+async def avatars(session: SessionDep, user_id: int):
+    return await get_avatar_or_frame_user_service(user_id, "avatar", session)
+
+@router.get("/{user_id}/frame", response_model=list[SUserAvatarOrFrameResponse], status_code=status.HTTP_200_OK)
+async def frames(session: SessionDep, user_id: int):
+    return await get_avatar_or_frame_user_service(user_id, "frame", session)
+
+@router.post("/{user_id}/avatar/{shop_item_id}")
+async def change_avatar(session: SessionDep, user_id: int, shop_item_id: int):
+    await change_avatar_service(user_id, shop_item_id, session)
+    return {"success": True}
+
+@router.post("/{user_id}/frame/{shop_item_id}")
+async def change_avatar(session: SessionDep, user_id: int, shop_item_id: int):
+    await change_frame_service(user_id, shop_item_id, session)
+    return {"success": True}
