@@ -17,6 +17,7 @@ class SUserResponse(BaseModel):
 class SUserInventoryResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    inventory_id: int
     shop_item_id: int
     name_key: str
     type: str

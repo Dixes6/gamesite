@@ -186,6 +186,7 @@ async def get_inventory_user_service(user_id: int, session: SessionDep):
 
     return [
         {
+            "inventory_id": item.id,
             "shop_item_id": item.shop_item_id,
             "name_key": item.shop_item.name_key,
             "type": item.shop_item.type,

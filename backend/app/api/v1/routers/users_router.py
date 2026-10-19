@@ -40,12 +40,12 @@ async def avatars(session: SessionDep, user_id: int):
 async def frames(session: SessionDep, user_id: int):
     return await get_avatar_or_frame_user_service(user_id, "frame", session)
 
-@router.post("/{user_id}/avatar/{shop_item_id}")
+@router.patch("/{user_id}/avatar/{shop_item_id}", status_code=status.HTTP_200_OK)
 async def change_avatar(session: SessionDep, user_id: int, shop_item_id: int):
     await change_avatar_service(user_id, shop_item_id, session)
     return {"success": True}
 
-@router.post("/{user_id}/frame/{shop_item_id}")
+@router.patch("/{user_id}/frame/{shop_item_id}", status_code=status.HTTP_200_OK)
 async def change_avatar(session: SessionDep, user_id: int, shop_item_id: int):
     await change_frame_service(user_id, shop_item_id, session)
     return {"success": True}

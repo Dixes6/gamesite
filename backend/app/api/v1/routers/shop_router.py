@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status
 
 from app.db.session import SessionDep
-from app.service.shop_service import get_shop_items, buy_item
+from app.service.shop_service import get_shop_items, buy_item, sell_item
 from app.schemas.shop_schemas import SShopListResponse, SShopBuyResponse
 
 router = APIRouter(prefix="/shop", tags=["Магазин"])
@@ -14,6 +14,7 @@ async def get_shop(session: SessionDep, user_id: int):
 async def buy_in_shop_item(session: SessionDep, user_id: int, shop_item_id: int):
     return await buy_item(user_id, shop_item_id, session)
 
-@router.post("/{user_id}/sell/shop_item_id}")
-async def sell_in_shop_item():
-    pass
+@router.delete("/{user_id}/sell/{inventory_item_id}", status_code=status.HTTP_201_CREATED)
+async def sell_in_shop_item(session: SessionDep, user_id: int, inventory_item_id: int):
+    await sell_item(user_id, inventory_item_id, session)
+    return {"success": True}
