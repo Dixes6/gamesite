@@ -15,6 +15,11 @@ class SShopListResponse(BaseModel):
     available: list[SShopResponse]
     unavailable: list[SShopResponse]
 
+class SGetShopResponse(BaseModel):
+    page_title: str
+    page_description: str
+    shop: SShopListResponse
+
 class SShopBuyResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

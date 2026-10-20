@@ -32,15 +32,27 @@ async def xp_to_next_level(user_id: int, session: SessionDep) -> int | None:
     return to_next_level
 
 async def add_xp(user_id: int, amount: int, session: SessionDep):
+    from app.service.task_service import register_task_event
+
     user = await session.get(UsersModel, user_id)
 
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
 
+    old_level = user.level
     user.current_xp += amount
 
     while user.level < MAX_LEVEL and user.current_xp >= LEVEL_THRESHOLDS[user.level + 1]:
         user.level += 1
+
+    if user.level > old_level:
+        level_up = user.level - old_level
+        await register_task_event(
+            user_id=user_id,
+            condition_type="pass_levels",
+            session=session,
+            amount=level_up,
+        )
 
     await session.commit()
 
@@ -188,7 +200,7 @@ async def get_inventory_user_service(user_id: int, session: SessionDep):
         {
             "inventory_id": item.id,
             "shop_item_id": item.shop_item_id,
-            "name_key": item.shop_item.name_key,
+            "name": item.shop_item.name,
             "type": item.shop_item.type,
             "selling_price": item.shop_item.selling_price,
             "is_exclusive": item.shop_item.is_exclusive,
@@ -220,7 +232,7 @@ async def get_avatar_or_frame_user_service(user_id: int, item_type: Literal["ava
     return [
         {
             "shop_item_id": item.shop_item_id,
-            "name_key": item.shop_item.name_key,
+            "name": item.shop_item.name,
             "type": item.shop_item.type,
             "is_exclusive": item.shop_item.is_exclusive,
             "is_starter": item.shop_item.is_starter,

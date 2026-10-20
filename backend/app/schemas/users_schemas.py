@@ -19,7 +19,7 @@ class SUserInventoryResponse(BaseModel):
 
     inventory_id: int
     shop_item_id: int
-    name_key: str
+    name: str
     type: str
     selling_price: int | None = None
     is_exclusive: bool
@@ -34,7 +34,7 @@ class SRewardStreakResponse(BaseModel):
 
 class SUserAvatarOrFrameResponse(BaseModel):
     shop_item_id: int
-    name_key: str
+    name: str
     type: str
     is_exclusive: bool
     is_starter: bool

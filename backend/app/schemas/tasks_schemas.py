@@ -5,6 +5,7 @@ class SUserTaskResponse(BaseModel):
 
     id: int
     task_template_id: int
+    period: str
     progress: int
     target_value: int
     reward_rubies: int

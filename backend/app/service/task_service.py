@@ -1,12 +1,13 @@
 from datetime import datetime, timedelta
-from sqlalchemy import select, and_, case, insert
+from sqlalchemy import select, and_, case, insert, delete, join
 from sqlalchemy.orm import selectinload, joinedload
 from fastapi import status, HTTPException
 import random
 
+from app.db.models import InventoryModel
 from app.db.session import SessionDep
 from app.db.models.user import UsersModel
-from app.db.models.task import UserTaskModel, TaskTemplateModel
+from app.db.models.task import UserTaskModel, TaskTemplateModel, CurrentTasksModel
 from app.service.user_service import add_xp, add_or_remove_rubies
 
 async def get_user_task_service(user_id: int, session: SessionDep) -> dict:
@@ -72,6 +73,7 @@ async def get_user_task_service(user_id: int, session: SessionDep) -> dict:
         {
             "id": task.id,
             "task_template_id": task.task_template_id,
+            "period": task.task_template.period,
             "progress": task.progress,
             "target_value": task.task_template.target_value,
             "reward_rubies": task.task_template.reward_rubies,
@@ -85,6 +87,7 @@ async def get_user_task_service(user_id: int, session: SessionDep) -> dict:
         {
             "id": task.id,
             "task_template_id": task.task_template_id,
+            "period": task.task_template.period,
             "progress": task.progress,
             "target_value": task.task_template.target_value,
             "reward_rubies": task.task_template.reward_rubies,
@@ -251,6 +254,7 @@ async def generate_tasks(period: str, session: SessionDep):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
 
     user_task = []
+    current_tasks = []
 
     for user in users:
         for task_id in list_task_id:
@@ -262,12 +266,68 @@ async def generate_tasks(period: str, session: SessionDep):
                 "reward_claimed": False,
             })
 
+    for task_id in list_task_id:
+        current_tasks.append({
+            "period": period,
+            "task_template_id": task_id,
+            "progress": 0,
+            "is_completed": False,
+            "reward_claimed": False,
+        })
+
     await session.execute(
         insert(UserTaskModel)
         .values(user_task)
     )
+
+    await session.execute(
+        delete(CurrentTasksModel)
+        .where(CurrentTasksModel.period == period)
+    )
+
+    await session.execute(
+        insert(CurrentTasksModel)
+        .values(current_tasks)
+    )
+
     await session.commit()
 
+async def get_user_tasks(user_id: int, session: SessionDep):
+    inventory_user = await session.execute(
+        select(InventoryModel)
+        .where(InventoryModel.user_id == user_id)
+    )
 
+    if inventory_user.first() is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Инвентарь пользователя не найден",
+        )
 
+    tasks_stmt = await session.execute(
+        select(CurrentTasksModel)
+    )
+    tasks = list(tasks_stmt.scalars())
 
+    if not tasks:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Актуальные задания не найдены",
+        )
+
+    current_tasks = []
+
+    for task in tasks:
+        current_tasks.append({
+            "user_id": user_id,
+            "task_template_id": task.task_template_id,
+            "progress": task.progress,
+            "is_completed": task.is_completed,
+            "reward_claimed": task.reward_claimed,
+        })
+
+    await session.execute(
+        insert(UserTaskModel)
+        .values(current_tasks)
+    )
+    await session.commit()

@@ -42,6 +42,7 @@ class InventoryModel(Model):
 
     __table_args__ = (
         CheckConstraint("quantity >= 0", name="check_quantity"),
+        CheckConstraint("source IN ('purchase', 'case', 'default)", name="check_source"),
     )
 
 class StreakModel(Model):
