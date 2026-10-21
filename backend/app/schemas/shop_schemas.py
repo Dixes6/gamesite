@@ -4,7 +4,8 @@ class SShopResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    name_key: str
+    name: str
+    image: str
     type: str
     price: int | None = None
     is_exclusive: bool
@@ -23,6 +24,6 @@ class SGetShopResponse(BaseModel):
 class SShopBuyResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    name_key: str
+    name: str
     type: str
     rarity: str

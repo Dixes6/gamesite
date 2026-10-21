@@ -6,7 +6,9 @@ class SUserResponse(BaseModel):
 
     username: str
     avatar_id: int
+    avatar_image: str
     frame_id: int
+    frame_image: str
     level: int
     current_xp: int
     xp_to_next_level: int
@@ -20,6 +22,7 @@ class SUserInventoryResponse(BaseModel):
     inventory_id: int
     shop_item_id: int
     name: str
+    image: str
     type: str
     selling_price: int | None = None
     is_exclusive: bool
@@ -35,6 +38,7 @@ class SRewardStreakResponse(BaseModel):
 class SUserAvatarOrFrameResponse(BaseModel):
     shop_item_id: int
     name: str
+    image: str
     type: str
     is_exclusive: bool
     is_starter: bool

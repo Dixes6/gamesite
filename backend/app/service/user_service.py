@@ -153,7 +153,15 @@ async def change_avatar_service(user_id: int, shop_item_id: int, session: Sessio
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
 
+    shop_item_stmt = await session.execute(
+        select(ShopItemModel)
+        .where(ShopItemModel.id == item.shop_item_id)
+    )
+
+    shop_item = shop_item_stmt.scalar_one_or_none()
+
     user.avatar_id = item.shop_item_id
+    user.avatar_image = shop_item.image
 
     await session.commit()
 
@@ -176,7 +184,15 @@ async def change_frame_service(user_id: int, shop_item_id: int, session: Session
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
 
+    shop_item_stmt = await session.execute(
+        select(ShopItemModel)
+        .where(ShopItemModel.id == item.shop_item_id)
+    )
+
+    shop_item = shop_item_stmt.scalar_one_or_none()
+
     user.frame_id = item.shop_item_id
+    user.frame_image = shop_item.image
 
     await session.commit()
 
@@ -201,6 +217,7 @@ async def get_inventory_user_service(user_id: int, session: SessionDep):
             "inventory_id": item.id,
             "shop_item_id": item.shop_item_id,
             "name": item.shop_item.name,
+            "image": item.shop_item.image,
             "type": item.shop_item.type,
             "selling_price": item.shop_item.selling_price,
             "is_exclusive": item.shop_item.is_exclusive,
@@ -233,6 +250,7 @@ async def get_avatar_or_frame_user_service(user_id: int, item_type: Literal["ava
         {
             "shop_item_id": item.shop_item_id,
             "name": item.shop_item.name,
+            "image": item.shop_item.image,
             "type": item.shop_item.type,
             "is_exclusive": item.shop_item.is_exclusive,
             "is_starter": item.shop_item.is_starter,
@@ -240,3 +258,8 @@ async def get_avatar_or_frame_user_service(user_id: int, item_type: Literal["ava
         }
         for item in user_inventory
     ]
+
+async def get_image(item_id, session: SessionDep) -> dict:
+    shop_item = await session.get(ShopItemModel, item_id)
+
+    return shop_item.image

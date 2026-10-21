@@ -5,6 +5,7 @@ class SCaseResponse(BaseModel):
     
     id: int
     name: str
+    image: str
     unlock_level: int
     price: int
 

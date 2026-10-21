@@ -5,6 +5,8 @@ class SUserTaskResponse(BaseModel):
 
     id: int
     task_template_id: int
+    condition_type: str
+    game_type: str | None
     period: str
     progress: int
     target_value: int

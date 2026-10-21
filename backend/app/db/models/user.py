@@ -12,7 +12,7 @@ class UsersModel(Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(nullable=False)
-    avatar_id: Mapped[int | None] = mapped_column(ForeignKey("shop_item.id"),nullable=True)
+    avatar_id: Mapped[int | None] = mapped_column(ForeignKey("shop_item.id"), nullable=True)
     frame_id: Mapped[int | None] = mapped_column(ForeignKey("shop_item.id"), nullable=True)
     level: Mapped[int] = mapped_column(nullable=False)
     current_xp: Mapped[int] = mapped_column(nullable=False)
@@ -42,7 +42,7 @@ class InventoryModel(Model):
 
     __table_args__ = (
         CheckConstraint("quantity >= 0", name="check_quantity"),
-        CheckConstraint("source IN ('purchase', 'case', 'default)", name="check_source"),
+        CheckConstraint("source IN ('purchase', 'case', 'default')", name="check_source"),
     )
 
 class StreakModel(Model):

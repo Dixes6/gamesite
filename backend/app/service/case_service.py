@@ -2,6 +2,7 @@ import random
 from sqlalchemy import insert, select
 from fastapi import status, HTTPException
 
+from app.db.models import ShopItemModel
 from app.db.session import SessionDep
 from app.db.models.user import UsersModel
 from app.db.models.case import CaseModel, CaseItemModel, UserCaseHistoryModel
@@ -91,9 +92,21 @@ async def open_case_service(user_id: int, case_id: int, session: SessionDep) -> 
                 insert(UserCaseHistoryModel)
                 .values(user_case_history)
             )
+
+            shop_item_stmt = await session.execute(
+                select(ShopItemModel)
+                .where(ShopItemModel.id == shop_item_id)
+            )
+            shop_item = shop_item_stmt.scalar_one_or_none()
+
             await session.commit()
             return {
-                "shop_item": shop_item_id
+                "shop_item": shop_item_id,
+                "name": shop_item.name,
+                "image": shop_item.image,
+                "type": shop_item.type,
+                "is_exclusive": shop_item.is_exclusive,
+                "rarity": shop_item.rarity,
             }
 
     elif user_result.level < case.unlock_level:

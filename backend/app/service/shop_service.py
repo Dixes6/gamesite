@@ -52,7 +52,8 @@ async def buy_item(user_id: int, shop_item_id: int, session: SessionDep):
 
     await session.commit()
     return {
-        "name_key": item.name_key,
+        "name": item.name,
+        "image": item.image,
         "type": item.type,
         "rarity": item.rarity,
     }

@@ -73,6 +73,8 @@ async def get_user_task_service(user_id: int, session: SessionDep) -> dict:
         {
             "id": task.id,
             "task_template_id": task.task_template_id,
+            "condition_type": task.task_template.condition_type,
+            "game_type": task.task_template.game_type,
             "period": task.task_template.period,
             "progress": task.progress,
             "target_value": task.task_template.target_value,
@@ -87,6 +89,8 @@ async def get_user_task_service(user_id: int, session: SessionDep) -> dict:
         {
             "id": task.id,
             "task_template_id": task.task_template_id,
+            "condition_type": task.task_template.condition_type,
+            "game_type": task.task_template.game_type,
             "period": task.task_template.period,
             "progress": task.progress,
             "target_value": task.task_template.target_value,
@@ -154,7 +158,7 @@ async def register_task_event(
 
     for task in filtered_tasks:
         if game_type is not None:
-            if task.task_template.game_type:
+            if task.task_template.game_type != game_type:
                 continue
 
         task.progress += amount

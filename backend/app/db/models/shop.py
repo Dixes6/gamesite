@@ -12,6 +12,7 @@ class ShopItemModel(Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(nullable=False)
+    image: Mapped[str] = mapped_column(nullable=False)
     type: Mapped[str] = mapped_column(nullable=False)
     price: Mapped[int | None] = mapped_column(nullable=True)
     selling_price: Mapped[int | None] = mapped_column(nullable=True)

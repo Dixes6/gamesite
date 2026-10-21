@@ -13,9 +13,9 @@ async def games():
         "page_title": LEXICON_RU["game"]["page_title"],
         "page_description": LEXICON_RU["game"]["page_description"],
         "games": [
-            {"game_name": "Кликер", "game_icon": None, "game_link": "/games/clicker"},
-            {"game_name": "На реакцию", "game_icon": None, "game_link": "/games/reaction"},
-            {"game_name": "2048", "game_icon": None, "game_link": "/games/2048"},
+            {"game_type": "clicker", "game_name": "Кликер", "game_icon": None, "game_link": "/games/clicker"},
+            {"game_type": "reaction", "game_name": "На реакцию", "game_icon": None, "game_link": "/games/reaction"},
+            {"game_type": "2048", "game_name": "2048", "game_icon": None, "game_link": "/games/2048"},
         ]
     }
 

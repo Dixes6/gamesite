@@ -3,7 +3,7 @@ from fastapi import APIRouter, status
 from app.schemas.users_schemas import SUserResponse, SUserInventoryResponse, SRewardStreakResponse, SUserAvatarOrFrameResponse
 from app.db.session import SessionDep
 from app.api.v1.deps import get_current_user
-from app.service.user_service import xp_to_next_level, get_inventory_user_service, get_avatar_or_frame_user_service, change_avatar_service, change_frame_service
+from app.service.user_service import xp_to_next_level, get_inventory_user_service, get_avatar_or_frame_user_service, change_avatar_service, change_frame_service, get_image
 from app.service.streak_service import streak_status, claim_reward
 
 router = APIRouter(prefix="/main", tags=["Главное меню"])
@@ -15,7 +15,9 @@ async def user(session: SessionDep, user_id: int) -> SUserResponse:
     return SUserResponse(
         username = user.username,
         avatar_id = user.avatar_id,
+        avatar_image = await get_image(item_id=user.avatar_id, session=session),
         frame_id= user.frame_id,
+        frame_image=await get_image(item_id=user.frame_id, session=session),
         level = user.level,
         current_xp = user.current_xp,
         xp_to_next_level = await xp_to_next_level(user.id, session=session),
