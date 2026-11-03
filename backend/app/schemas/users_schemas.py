@@ -1,14 +1,26 @@
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
+class SUserRegister(BaseModel):
+    username: str
+    password: str
+
+class SUserLogin(BaseModel):
+    username: str
+    password: str
+
+class STokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+
 class SUserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     username: str
-    avatar_id: int
-    avatar_image: str
-    frame_id: int
-    frame_image: str
+    avatar_id: int | None = None
+    avatar_image: str | None = None
+    frame_id: int | None = None
+    frame_image: str | None = None
     level: int
     current_xp: int
     xp_to_next_level: int

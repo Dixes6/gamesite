@@ -259,7 +259,8 @@ async def get_avatar_or_frame_user_service(user_id: int, item_type: Literal["ava
         for item in user_inventory
     ]
 
-async def get_image(item_id, session: SessionDep) -> dict:
+async def get_image(item_id, session: SessionDep) -> str | None:
+    if item_id is None:
+        return None
     shop_item = await session.get(ShopItemModel, item_id)
-
     return shop_item.image

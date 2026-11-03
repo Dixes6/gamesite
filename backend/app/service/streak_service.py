@@ -67,7 +67,13 @@ async def streak_status(user_id: int, session: SessionDep) -> dict:
     streak = streak_stmt.scalar_one_or_none()
 
     if streak is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Не найден стрик для пользователя")
+        streak = StreakModel(
+            user_id=user_id,
+            current_streak=0,
+            best_streak=0,
+            last_claim_date=datetime.now(ZoneInfo("Europe/Moscow")).replace(tzinfo=None),
+        )
+        session.add(streak)
 
     if datetime.now(ZoneInfo("Europe/Moscow")).replace(tzinfo=None) - streak.last_claim_date >= timedelta(days=2):
         streak.current_streak = 0

@@ -14,6 +14,7 @@ from app.api.v1.routers.games_router import router as game_router
 from app.api.v1.routers.cases_router import router as case_router
 from app.api.v1.routers.shop_router import router as shop_router
 from app.api.v1.routers.tasks_router import router as task_router
+from app.api.v1.routers.auth_router import router as auth_router
 
 scheduler = AsyncIOScheduler(timezone=ZoneInfo("Europe/Moscow"))
 
@@ -58,6 +59,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(game_router)
 app.include_router(case_router)
