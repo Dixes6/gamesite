@@ -16,6 +16,10 @@ class SShopListResponse(BaseModel):
     available: list[SShopResponse]
     unavailable: list[SShopResponse]
 
+class SStartAvatarsAndFramesResponse(BaseModel):
+    avatars: list[SShopResponse]
+    frames: list[SShopResponse]
+
 class SGetShopResponse(BaseModel):
     page_title: str
     page_description: str

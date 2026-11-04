@@ -4,6 +4,8 @@ from datetime import datetime
 class SUserRegister(BaseModel):
     username: str
     password: str
+    avatar_id: int
+    frame_id: int
 
 class SUserLogin(BaseModel):
     username: str

@@ -108,8 +108,6 @@ async def add_item_to_inventory(user_id: int, shop_item_id: int, source: str, qu
     else:
         item.quantity += quantity
 
-    await session.commit()
-
 async def remove_item_from_inventory(user_id: int, shop_item_id: int, quantity: int, session: SessionDep):
     result = await session.execute(
         select(InventoryModel)

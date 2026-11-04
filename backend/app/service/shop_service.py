@@ -6,6 +6,28 @@ from app.db.models.user import UsersModel, InventoryModel
 from app.db.models.shop import ShopItemModel
 from app.service.user_service import add_or_remove_rubies, add_item_to_inventory, remove_item_from_inventory
 
+async def get_avatar_and_frame_for_register(session: SessionDep):
+    result = await session.execute(
+        select(ShopItemModel)
+        .where(ShopItemModel.is_starter == True,
+               ShopItemModel.rarity == "common")
+    )
+    items = result.scalars().all()
+
+    avatars = []
+    frames = []
+
+    for item in items:
+        if item.type == 'avatar':
+            avatars.append(item)
+        else:
+            frames.append(item)
+
+    return {
+        "avatars": avatars,
+        "frames": frames,
+    }
+
 async def get_shop_items(user_id: int, session: SessionDep) -> dict | None:
     user = await session.get(UsersModel, user_id)
 
