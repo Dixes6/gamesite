@@ -4,6 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Model
 
+
 class TaskTemplateModel(Model):
     __tablename__ = "task_template"
 
@@ -21,20 +22,31 @@ class TaskTemplateModel(Model):
 
     __table_args__ = (
         CheckConstraint("period IN ('day', 'week', 'month')", name="check_period"),
-        CheckConstraint("condition_type IN ('score_in_game', 'open_case', 'pass_levels')", name="check_condition_type"),
         CheckConstraint(
-            (condition_type.in_(['open_case', 'pass_levels']) & game_type.is_(None)) |
-            (~condition_type.in_(['open_case', 'pass_levels']) & game_type.in_(['clicker', 'reaction', '2048'])),
-            name="check_task_game_type"
+            "condition_type IN ('score_in_game', 'open_case', 'pass_levels')",
+            name="check_condition_type",
+        ),
+        CheckConstraint(
+            (condition_type.in_(["open_case", "pass_levels"]) & game_type.is_(None))
+            | (
+                ~condition_type.in_(["open_case", "pass_levels"])
+                & game_type.in_(["clicker", "reaction", "2048"])
+            ),
+            name="check_task_game_type",
         ),
     )
+
 
 class UserTaskModel(Model):
     __tablename__ = "user_task"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete='CASCADE'), nullable=False)
-    task_template_id: Mapped[int] = mapped_column(ForeignKey("task_template.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    task_template_id: Mapped[int] = mapped_column(
+        ForeignKey("task_template.id"), nullable=False
+    )
     progress: Mapped[int] = mapped_column(nullable=False)
     is_completed: Mapped[bool] = mapped_column(nullable=False)
     reward_claimed: Mapped[bool] = mapped_column(nullable=False)
@@ -44,12 +56,15 @@ class UserTaskModel(Model):
         back_populates="user_tasks"
     )
 
+
 class CurrentTasksModel(Model):
     __tablename__ = "current_tasks"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     period: Mapped[str] = mapped_column(nullable=False)
-    task_template_id: Mapped[int] = mapped_column(ForeignKey("task_template.id"), nullable=False)
+    task_template_id: Mapped[int] = mapped_column(
+        ForeignKey("task_template.id"), nullable=False
+    )
     progress: Mapped[int] = mapped_column(nullable=False)
     is_completed: Mapped[bool] = mapped_column(nullable=False)
     reward_claimed: Mapped[bool] = mapped_column(nullable=False)

@@ -1,19 +1,23 @@
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
+
 class SUserRegister(BaseModel):
     username: str
     password: str
     avatar_id: int
     frame_id: int
 
+
 class SUserLogin(BaseModel):
     username: str
     password: str
 
+
 class STokenResponse(BaseModel):
     access_token: str
     token_type: str
+
 
 class SUserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -30,6 +34,7 @@ class SUserResponse(BaseModel):
     current_streak: int
     last_claim_date: datetime
 
+
 class SUserInventoryResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -44,6 +49,7 @@ class SUserInventoryResponse(BaseModel):
     rarity: str
     obtained_at: datetime
     quantity: int
+
 
 class SRewardStreakResponse(BaseModel):
     amount_rubies: int

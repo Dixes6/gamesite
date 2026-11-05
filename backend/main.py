@@ -18,6 +18,7 @@ from app.api.v1.routers.auth_router import router as auth_router
 
 scheduler = AsyncIOScheduler(timezone=ZoneInfo("Europe/Moscow"))
 
+
 async def scheduled_generate_tasks(period: str):
     async with async_session() as session:
         await generate_tasks(period=period, session=session)
@@ -49,6 +50,7 @@ scheduler.add_job(
     kwargs={"period": "month"},
 )
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     scheduler.start()
@@ -56,6 +58,7 @@ async def lifespan(app: FastAPI):
         yield
     finally:
         scheduler.shutdown(wait=False)
+
 
 app = FastAPI(lifespan=lifespan)
 

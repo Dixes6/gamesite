@@ -10,11 +10,14 @@ from app.db.models.user import UsersModel
 from app.db.models.task import UserTaskModel, TaskTemplateModel, CurrentTasksModel
 from app.service.user_service import add_xp, add_or_remove_rubies
 
+
 async def get_user_task_service(user_id: int, session: SessionDep) -> dict:
     user = await session.get(UsersModel, user_id)
 
     if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден"
+        )
 
     now = datetime.now()
     start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -106,17 +109,20 @@ async def get_user_task_service(user_id: int, session: SessionDep) -> dict:
         "unfulfilled": unfulfilled,
     }
 
+
 async def register_task_event(
-        user_id: int,
-        condition_type: str,
-        session: SessionDep,
-        game_type: str | None = None,
-        amount: int = 1,
+    user_id: int,
+    condition_type: str,
+    session: SessionDep,
+    game_type: str | None = None,
+    amount: int = 1,
 ):
     user = await session.get(UsersModel, user_id)
 
     if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден"
+        )
 
     now = datetime.now()
 
@@ -169,11 +175,16 @@ async def register_task_event(
 
     await session.commit()
 
-async def claim_reward_service(user_id: int, user_task_id: int, session: SessionDep) -> tuple(int, int):
+
+async def claim_reward_service(
+    user_id: int, user_task_id: int, session: SessionDep
+) -> tuple[int, int]:
     user = await session.get(UsersModel, user_id)
 
     if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден"
+        )
 
     task_stmt = await session.execute(
         select(UserTaskModel)
@@ -182,20 +193,24 @@ async def claim_reward_service(user_id: int, user_task_id: int, session: Session
             and_(
                 UserTaskModel.id == user_task_id,
                 UserTaskModel.user_id == user_id,
-                ),
-            )
+            ),
         )
+    )
 
     task = task_stmt.scalar_one_or_none()
 
     if task is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Задание не найдено")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Задание не найдено"
+        )
 
     if task.is_completed == True and task.reward_claimed == False:
         amount_xp = task.task_template.reward_xp
         amount_rubies = task.task_template.reward_rubies
         await add_xp(user_id=user_id, amount=amount_xp, session=session)
-        await add_or_remove_rubies(user_id=user_id, amount=amount_rubies, reason="task_reward", session=session)
+        await add_or_remove_rubies(
+            user_id=user_id, amount=amount_rubies, reason="task_reward", session=session
+        )
         task.reward_claimed = True
         await session.commit()
         return {
@@ -203,18 +218,20 @@ async def claim_reward_service(user_id: int, user_task_id: int, session: Session
             "amount_rubies": amount_rubies,
         }
     else:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Нельзя забрать награду")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Нельзя забрать награду"
+        )
+
 
 async def generate_tasks(period: str, session: SessionDep):
     tasks_stmt = await session.execute(
-        select(TaskTemplateModel)
-        .where(TaskTemplateModel.period == period)
+        select(TaskTemplateModel).where(TaskTemplateModel.period == period)
     )
 
     tasks = list(tasks_stmt.scalars())
 
     if not tasks:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Задание не найдено")
+        return
 
     tasks_len = len(tasks)
     list_task_id = []
@@ -249,89 +266,77 @@ async def generate_tasks(period: str, session: SessionDep):
         task = random.choice(tasks).id
         list_task_id.append(task)
 
-    users_stmt = await session.execute(
-        select(UsersModel)
-    )
+    users_stmt = await session.execute(select(UsersModel))
     users = list(users_stmt.scalars())
 
     if not users:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
+        return
 
     user_task = []
     current_tasks = []
 
     for user in users:
         for task_id in list_task_id:
-            user_task.append({
-                "user_id": user.id,
+            user_task.append(
+                {
+                    "user_id": user.id,
+                    "task_template_id": task_id,
+                    "progress": 0,
+                    "is_completed": False,
+                    "reward_claimed": False,
+                }
+            )
+
+    for task_id in list_task_id:
+        current_tasks.append(
+            {
+                "period": period,
                 "task_template_id": task_id,
                 "progress": 0,
                 "is_completed": False,
                 "reward_claimed": False,
-            })
+            }
+        )
 
-    for task_id in list_task_id:
-        current_tasks.append({
-            "period": period,
-            "task_template_id": task_id,
-            "progress": 0,
-            "is_completed": False,
-            "reward_claimed": False,
-        })
+    await session.execute(insert(UserTaskModel).values(user_task))
 
     await session.execute(
-        insert(UserTaskModel)
-        .values(user_task)
+        delete(CurrentTasksModel).where(CurrentTasksModel.period == period)
     )
 
-    await session.execute(
-        delete(CurrentTasksModel)
-        .where(CurrentTasksModel.period == period)
-    )
-
-    await session.execute(
-        insert(CurrentTasksModel)
-        .values(current_tasks)
-    )
+    await session.execute(insert(CurrentTasksModel).values(current_tasks))
 
     await session.commit()
 
-async def get_user_tasks(user_id: int, session: SessionDep):
-    inventory_user = await session.execute(
-        select(InventoryModel)
-        .where(InventoryModel.user_id == user_id)
-    )
 
-    if inventory_user.first() is None:
+async def assign_current_tasks_to_user(user_id: int, session: SessionDep):
+    user = await session.get(UsersModel, user_id)
+
+    if user is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Инвентарь пользователя не найден",
+            status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден"
         )
 
-    tasks_stmt = await session.execute(
-        select(CurrentTasksModel)
-    )
+    tasks_stmt = await session.execute(select(CurrentTasksModel))
     tasks = list(tasks_stmt.scalars())
 
     if not tasks:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Актуальные задания не найдены",
+            status_code=status.HTTP_404_NOT_FOUND, detail="Задания не найдены"
         )
 
     current_tasks = []
 
     for task in tasks:
-        current_tasks.append({
-            "user_id": user_id,
-            "task_template_id": task.task_template_id,
-            "progress": task.progress,
-            "is_completed": task.is_completed,
-            "reward_claimed": task.reward_claimed,
-        })
+        current_tasks.append(
+            {
+                "user_id": user_id,
+                "task_template_id": task.task_template_id,
+                "progress": task.progress,
+                "is_completed": task.is_completed,
+                "reward_claimed": task.reward_claimed,
+            }
+        )
 
-    await session.execute(
-        insert(UserTaskModel)
-        .values(current_tasks)
-    )
+    await session.execute(insert(UserTaskModel).values(current_tasks))
     await session.commit()

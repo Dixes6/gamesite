@@ -3,6 +3,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 
+
 class Settings(BaseSettings):
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
@@ -24,5 +25,5 @@ class Settings(BaseSettings):
     def database_url_psycopg(self) -> str:
         return f"postgresql+psycopg2://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
-settings = Settings()
 
+settings = Settings()

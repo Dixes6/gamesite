@@ -1,7 +1,7 @@
 from .user import UsersModel, InventoryModel, StreakModel
 from .case import CaseModel, CaseItemModel, UserCaseHistoryModel
 from .shop import ShopItemModel
-from .task import TaskTemplateModel, UserTaskModel
+from .task import TaskTemplateModel, UserTaskModel, CurrentTasksModel
 from .game_session import GameSessionModel
 from .transaction import TransactionModel
 
@@ -15,6 +15,7 @@ __all__ = [
     "ShopItemModel",
     "TaskTemplateModel",
     "UserTaskModel",
+    "CurrentTasksModel",
     "GameSessionModel",
     "TransactionModel",
 ]

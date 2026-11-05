@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 
+
 class SUserTaskResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -18,6 +19,7 @@ class SUserTaskResponse(BaseModel):
 class SUserTasksResponse(BaseModel):
     completed: list[SUserTaskResponse]
     unfulfilled: list[SUserTaskResponse]
+
 
 class SClaimRewardResponse(BaseModel):
     amount_xp: int

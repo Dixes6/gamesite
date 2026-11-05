@@ -12,8 +12,12 @@ class UsersModel(Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(nullable=False)
-    avatar_id: Mapped[int | None] = mapped_column(ForeignKey("shop_item.id"), nullable=True)
-    frame_id: Mapped[int | None] = mapped_column(ForeignKey("shop_item.id"), nullable=True)
+    avatar_id: Mapped[int | None] = mapped_column(
+        ForeignKey("shop_item.id"), nullable=True
+    )
+    frame_id: Mapped[int | None] = mapped_column(
+        ForeignKey("shop_item.id"), nullable=True
+    )
     level: Mapped[int] = mapped_column(nullable=False)
     current_xp: Mapped[int] = mapped_column(nullable=False)
     rubies: Mapped[int] = mapped_column(nullable=False)
@@ -30,26 +34,33 @@ class InventoryModel(Model):
     __tablename__ = "inventory"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete='CASCADE'), nullable=False)
-    shop_item_id: Mapped[int] = mapped_column(ForeignKey("shop_item.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    shop_item_id: Mapped[int] = mapped_column(
+        ForeignKey("shop_item.id"), nullable=False
+    )
     source: Mapped[str] = mapped_column(nullable=False)
     obtained_at: Mapped[datetime] = mapped_column(nullable=False, default=func.now())
     quantity: Mapped[int] = mapped_column(nullable=False)
 
-    shop_item: Mapped["ShopItemModel"] = relationship(
-        back_populates="inventory_items"
-    )
+    shop_item: Mapped["ShopItemModel"] = relationship(back_populates="inventory_items")
 
     __table_args__ = (
         CheckConstraint("quantity >= 0", name="check_quantity"),
-        CheckConstraint("source IN ('purchase', 'case', 'default')", name="check_source"),
+        CheckConstraint(
+            "source IN ('purchase', 'case', 'default')", name="check_source"
+        ),
     )
+
 
 class StreakModel(Model):
     __tablename__ = "streak"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete='CASCADE'), nullable=False, unique=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
+    )
     current_streak: Mapped[int] = mapped_column(nullable=False)
     best_streak: Mapped[int] = mapped_column(nullable=False)
     last_claim_date: Mapped[datetime] = mapped_column(nullable=False)

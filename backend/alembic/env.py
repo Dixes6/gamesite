@@ -7,7 +7,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from app.core.config import settings
-from app.db.models.user import UsersModel #noqa
+from app.db.models.user import UsersModel  # noqa
 from app.db.base import Model
 
 config = context.config
@@ -15,7 +15,9 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-config.set_main_option("sqlalchemy.url", settings.database_url_asyncpg + "?async_fallback=True")
+config.set_main_option(
+    "sqlalchemy.url", settings.database_url_asyncpg + "?async_fallback=True"
+)
 
 target_metadata = Model.metadata
 
@@ -43,6 +45,7 @@ def run_migrations_offline() -> None:
     with context.begin_transaction():
         context.run_migrations()
 
+
 def do_run_migrations(connection):
     context.configure(
         connection=connection,
@@ -52,6 +55,7 @@ def do_run_migrations(connection):
 
     with context.begin_transaction():
         context.run_migrations()
+
 
 async def run_migrations_online() -> None:
     """Run migrations in 'online' mode.

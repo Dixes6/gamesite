@@ -7,6 +7,7 @@ from app.db.base import Model
 if TYPE_CHECKING:
     from app.db.models.user import InventoryModel
 
+
 class ShopItemModel(Model):
     __tablename__ = "shop_item"
 
@@ -28,9 +29,16 @@ class ShopItemModel(Model):
     __table_args__ = (
         CheckConstraint("type IN ('avatar', 'frame')", name="check_type"),
         CheckConstraint(
-            (price.is_not(None) & selling_price.is_not(None) & ~is_exclusive & ~is_starter) |
-            (price.is_(None) & selling_price.is_(None) & (is_exclusive | is_starter)),
-            name="check_item_price_logic"
+            (
+                price.is_not(None)
+                & selling_price.is_not(None)
+                & ~is_exclusive
+                & ~is_starter
+            )
+            | (price.is_(None) & selling_price.is_(None) & (is_exclusive | is_starter)),
+            name="check_item_price_logic",
         ),
-        CheckConstraint("rarity IN ('common', 'rare', 'epic', 'legendary')", name="check_rarity"),
+        CheckConstraint(
+            "rarity IN ('common', 'rare', 'epic', 'legendary')", name="check_rarity"
+        ),
     )
