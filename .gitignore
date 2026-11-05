@@ -1,4 +1,18 @@
+# Backend
 /.venv
 /.idea
 __pycache__
 backend/.env
+lint.bat
+
+# Frontend
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+frontend/.env.local
+frontend/.env.*.local

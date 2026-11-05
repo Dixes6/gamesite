@@ -1,0 +1,155 @@
+/* ==========================================================================
+   RPG Фэнтези Дизайн-система (Пиксель-арт / Пергамент)
+   ========================================================================== */
+
+:root {
+  --bg-parchment: #cfa970;
+  --bg-parchment-dark: #a9824f;
+  --bg-parchment-light: #dfbe88;
+  --ink: #2b1d12;
+  --ink-muted: #6e5538;
+  --panel-olive: #3f4b35;
+  --panel-olive-hover: #48563c;
+  --panel-olive-border: #7d8c5c;
+  --accent-green: #6f8f3a;
+  --ruby: #c4302b;
+  --nav-bg: #211812;
+  --nav-inactive: #9a8567;
+  --text-on-dark: #efe3c8;
+
+  --rarity-common: #9e9e9e;
+  --rarity-rare: #3b82f6;
+  --rarity-epic: #a855f7;
+  --rarity-legendary: #eab308;
+
+  --font-pixel: 'Russo One', sans-serif;
+  --font-body: 'Rubik', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100%;
+  background-color: #160f0a;
+  color: var(--ink);
+  font-family: var(--font-body);
+  user-select: none;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Десктоп-контейнер: мобильное приложение центрируется */
+#root {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: #120b07;
+}
+
+.app-viewport {
+  width: 100%;
+  max-width: 440px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-parchment);
+  background-image: 
+    radial-gradient(ellipse at top, rgba(255, 235, 190, 0.35) 0%, transparent 60%),
+    radial-gradient(ellipse at bottom, rgba(169, 130, 79, 0.45) 0%, transparent 70%),
+    linear-gradient(to right, rgba(130, 95, 52, 0.15) 0%, transparent 8%, transparent 92%, rgba(130, 95, 52, 0.15) 100%);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.85);
+  border-left: 2px solid #573f27;
+  border-right: 2px solid #573f27;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Пикселизация картинок */
+.pixelated, img {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+/* Заголовки в игровом квадратном шрифте Russo One */
+h1, h2, h3, h4, .pixel-text {
+  font-family: var(--font-pixel);
+  letter-spacing: 0.5px;
+  font-weight: 400; /* Russo One естественно плотный и жирный */
+}
+
+/* Стилизация скроллбара под ретро */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-parchment-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ink-muted);
+  border-radius: 3px;
+}
+
+/* Эффект нажатия кнопок */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition: transform 0.08s ease, filter 0.08s ease;
+}
+
+button:active:not(:disabled) {
+  transform: translateY(2px);
+  filter: brightness(0.92);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Инпуты в стиле пергамента */
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  padding: 12px 14px;
+  background: rgba(255, 248, 235, 0.7);
+  border: 2px solid var(--ink-muted);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  outline: none;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.12);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+  border-color: var(--panel-olive);
+  background: rgba(255, 252, 245, 0.95);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.18), 0 0 0 2px rgba(125, 140, 92, 0.4);
+}
+
+input::placeholder {
+  color: var(--ink-muted);
+  opacity: 0.75;
+  font-weight: 400;
+}
