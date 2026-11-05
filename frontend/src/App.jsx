@@ -5,6 +5,8 @@ import { ProfilePage } from './components/profile/ProfilePage';
 import { InventoryPage } from './components/inventory/InventoryPage';
 import { TasksPage } from './components/tasks/TasksPage';
 import { CasesPage } from './components/cases/CasesPage';
+import { ShopPage } from './components/shop/ShopPage';
+import { GamesPage } from './components/games/GamesPage';
 import { PlaceholderTab } from './components/common/PlaceholderTab';
 import { BottomNav } from './components/navigation/BottomNav';
 
@@ -87,6 +89,14 @@ export function App() {
 
     if (activeTab === 'cases') {
       return <CasesPage />;
+    }
+
+    if (activeTab === 'games') {
+      return <GamesPage />;
+    }
+
+    if (activeTab === 'shop') {
+      return <ShopPage />;
     }
 
     return <PlaceholderTab tabId={activeTab} />;

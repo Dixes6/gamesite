@@ -21,7 +21,7 @@ async def gameplay(
     if game_type == "clicker":
         reward = result_value
     elif game_type == "reaction":
-        reward = result_value * 100
+        reward = sum(lvl * 20 for lvl in range(1, result_value + 1))
     elif game_type == "2048":
         reward = 0
 

@@ -175,8 +175,7 @@ export async function claimTaskReward(userTaskId, token) {
 }
 
 /**
- * Получение списка кейсов (доступные и недоступные)
- * Backend: GET /cases
+ * Получение списка кейсов
  */
 export async function getCases(token) {
   const res = await fetch(`${API_BASE}/cases`, {
@@ -190,7 +189,6 @@ export async function getCases(token) {
 
 /**
  * Открытие кейса
- * Backend: POST /cases/{case_id}
  */
 export async function openCase(caseId, token) {
   const res = await fetch(`${API_BASE}/cases/${caseId}`, {
@@ -201,3 +199,65 @@ export async function openCase(caseId, token) {
   });
   return handleResponse(res);
 }
+
+/**
+ * Получение товаров магазина
+ * Backend: GET /shop
+ */
+export async function getShop(token) {
+  const res = await fetch(`${API_BASE}/shop`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return handleResponse(res);
+}
+
+/**
+ * Покупка товара в магазине
+ * Backend: POST /shop/buy/{shop_item_id}
+ */
+export async function buyShopItem(shopItemId, token) {
+  const res = await fetch(`${API_BASE}/shop/buy/${shopItemId}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return handleResponse(res);
+}
+
+/**
+ * Получение списка доступных мини-игр
+ * Backend: GET /games
+ */
+export async function getGames(token) {
+  const headers = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  const res = await fetch(`${API_BASE}/games`, {
+    method: 'GET',
+    headers,
+  });
+  return handleResponse(res);
+}
+
+/**
+ * Отправка результата сыгранной мини-игры
+ * Backend: POST /games/{game_type}
+ * Body: { result_value: number }
+ */
+export async function submitGameResult(gameType, resultValue, token) {
+  const res = await fetch(`${API_BASE}/games/${gameType}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ result_value: resultValue }),
+  });
+  return handleResponse(res);
+}
+

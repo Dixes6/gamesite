@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getStarterItems, getImageUrl } from '../../api/client';
 import { AvatarDisplay } from '../common/AvatarDisplay';
+import { ItemBadge } from '../common/ItemBadge';
 import { TEXT } from '../../constants/text';
 
 export function RegisterForm({ onSwitchToLogin }) {
@@ -208,6 +209,11 @@ export function RegisterForm({ onSwitchToLogin }) {
                     boxShadow: isSelected ? '0 0 8px rgba(111, 143, 58, 0.5)' : 'none',
                   }}
                 >
+                  {/* Иконка стартового предмета */}
+                  <div style={{ position: 'absolute', top: '-4px', left: '-4px', zIndex: 3 }}>
+                    <ItemBadge isStarter={true} iconOnly={true} />
+                  </div>
+
                   <img
                     src={getImageUrl(ava.image)}
                     alt={ava.name}
@@ -287,6 +293,11 @@ export function RegisterForm({ onSwitchToLogin }) {
                     boxShadow: isSelected ? '0 0 8px rgba(111, 143, 58, 0.5)' : 'none',
                   }}
                 >
+                  {/* Иконка стартового предмета */}
+                  <div style={{ position: 'absolute', top: '-4px', left: '-4px', zIndex: 3 }}>
+                    <ItemBadge isStarter={true} iconOnly={true} />
+                  </div>
+
                   <img
                     src={getImageUrl(frm.image)}
                     alt={frm.name}

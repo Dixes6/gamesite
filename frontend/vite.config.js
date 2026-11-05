@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: true, // Разрешает доступ из локальной сети и внешних туннелей
     port: 5173,
     proxy: {
       '/auth': {
@@ -19,6 +20,10 @@ export default defineConfig({
         changeOrigin: true,
       },
       '/tasks': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/games': {
         target: 'http://localhost:8000',
         changeOrigin: true,
       },

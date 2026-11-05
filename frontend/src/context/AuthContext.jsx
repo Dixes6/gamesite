@@ -65,10 +65,14 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
-  // Ручное обновление данных профиля (например, после покупок или начисления XP)
+  // Ручное обновление данных профиля (без включения глобального экрана загрузки)
   const refreshUser = async () => {
-    if (token) {
-      await fetchProfile(token);
+    if (!token) return;
+    try {
+      const profile = await getCurrentUserProfile(token);
+      setUser(profile);
+    } catch (err) {
+      console.warn('Не удалось фоново обновить профиль:', err.message);
     }
   };
 

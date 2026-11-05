@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { getUserInventory, equipAvatar, equipFrame, sellInventoryItem, getImageUrl } from '../../api/client';
+import { getUserInventory, equipAvatar, equipFrame, getImageUrl } from '../../api/client';
 import { PixelLandscape } from '../common/PixelLandscape';
-import { PixelIcon } from '../common/PixelIcon';
+import { ItemBadge } from '../common/ItemBadge';
 import { TEXT } from '../../constants/text';
 import { THEME } from '../../constants/theme';
 
@@ -66,25 +66,6 @@ export function InventoryPage({ onBack }) {
       setSelectedItem(null);
     } catch (err) {
       showToast(err.message || 'Не удалось надеть предмет');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  // Продажа предмета
-  const handleSell = async (item) => {
-    if (!window.confirm(`${TEXT.INVENTORY.CONFIRM_SELL} (+${item.selling_price} рубинов)`)) {
-      return;
-    }
-    try {
-      setActionLoading(true);
-      await sellInventoryItem(item.inventory_id, token);
-      await refreshUser();
-      await loadInventory();
-      showToast(TEXT.INVENTORY.SUCCESS_SELL);
-      setSelectedItem(null);
-    } catch (err) {
-      showToast(err.message || 'Не удалось продать предмет');
     } finally {
       setActionLoading(false);
     }
@@ -245,6 +226,13 @@ export function InventoryPage({ onBack }) {
                   transition: 'transform 0.1s ease',
                 }}
               >
+                {/* Бейдж происхождения (Эксклюзив ✨ / Стартовый ⭐) */}
+                {(item.is_exclusive || item.is_starter) && (
+                  <div style={{ position: 'absolute', top: '-6px', left: '-4px', zIndex: 3 }}>
+                    <ItemBadge isExclusive={item.is_exclusive} isStarter={item.is_starter} compact={true} />
+                  </div>
+                )}
+
                 {/* Бейдж «Надето» */}
                 {equipped && (
                   <div
@@ -259,7 +247,7 @@ export function InventoryPage({ onBack }) {
                       padding: '1px 5px',
                       borderRadius: '6px',
                       boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                      zIndex: 2,
+                      zIndex: 3,
                     }}
                   >
                     ✓ {TEXT.INVENTORY.EQUIPPED}
@@ -410,12 +398,13 @@ export function InventoryPage({ onBack }) {
               />
             </div>
 
-            {/* Название и редкость */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {/* Название, редкость и происхождение */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
               <h3 style={{ fontFamily: 'var(--font-pixel)', fontSize: '20px', color: 'var(--ink)' }}>
                 {selectedItem.name}
               </h3>
-              <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+
+              <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <span
                   style={{
                     fontSize: '11px',
@@ -448,9 +437,20 @@ export function InventoryPage({ onBack }) {
                     : TEXT.INVENTORY.TYPE_OTHER}
                 </span>
               </div>
+
+              {/* Бейдж происхождения предмета */}
+              {(selectedItem.is_exclusive || selectedItem.is_starter) && (
+                <div style={{ marginTop: '2px' }}>
+                  <ItemBadge
+                    isExclusive={selectedItem.is_exclusive}
+                    isStarter={selectedItem.is_starter}
+                    compact={false}
+                  />
+                </div>
+              )}
             </div>
 
-            {/* Кнопки действий: Надеть / Продать */}
+            {/* Кнопка действия: Надеть */}
             <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
               {(selectedItem.type === 'avatar' || selectedItem.type === 'frame') && (
                 <button
@@ -475,34 +475,6 @@ export function InventoryPage({ onBack }) {
                     : actionLoading
                     ? TEXT.INVENTORY.EQUIPPING
                     : TEXT.INVENTORY.EQUIP}
-                </button>
-              )}
-
-              {/* Кнопка продажи (если есть selling_price и не надето) */}
-              {selectedItem.selling_price && !isItemEquipped(selectedItem) && (
-                <button
-                  type="button"
-                  disabled={actionLoading}
-                  onClick={() => handleSell(selectedItem)}
-                  style={{
-                    padding: '10px',
-                    backgroundColor: 'rgba(196, 48, 43, 0.15)',
-                    color: '#8b1d19',
-                    fontFamily: 'var(--font-body)',
-                    fontWeight: 700,
-                    fontSize: '13px',
-                    borderRadius: '8px',
-                    border: '1.5px solid var(--ruby)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                  }}
-                >
-                  <PixelIcon name="ruby" size={16} />
-                  <span>
-                    {TEXT.INVENTORY.SELL} {selectedItem.selling_price}
-                  </span>
                 </button>
               )}
             </div>

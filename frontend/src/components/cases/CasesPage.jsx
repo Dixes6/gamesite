@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getCases, openCase, getImageUrl } from '../../api/client';
 import { PixelLandscape } from '../common/PixelLandscape';
 import { PixelIcon } from '../common/PixelIcon';
+import { ItemBadge } from '../common/ItemBadge';
 import { TEXT } from '../../constants/text';
 import { THEME } from '../../constants/theme';
 
@@ -390,14 +391,23 @@ export function CasesPage() {
               textAlign: 'center',
             }}
           >
-            <span style={{ fontSize: '38px' }}>🎉</span>
+            <span style={{ fontSize: '38px' }}>
+              {dropResult.is_exclusive ? '✨' : '🎉'}
+            </span>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
               <span style={{ fontSize: '12px', color: 'var(--ink-muted)', fontFamily: 'var(--font-body)', fontWeight: 600 }}>
                 {dropResult.caseName}
               </span>
-              <h3 style={{ fontFamily: 'var(--font-pixel)', fontSize: '20px', color: 'var(--ink)' }}>
-                {TEXT.CASES.DROP_TITLE}
+              <h3
+                style={{
+                  fontFamily: 'var(--font-pixel)',
+                  fontSize: '20px',
+                  color: dropResult.is_exclusive ? '#7c3aed' : 'var(--ink)',
+                  textShadow: dropResult.is_exclusive ? '0 0 10px rgba(124, 58, 237, 0.3)' : 'none',
+                }}
+              >
+                {dropResult.is_exclusive ? TEXT.BADGES.EXCLUSIVE_DROP : TEXT.CASES.DROP_TITLE}
               </h3>
             </div>
 
@@ -406,9 +416,14 @@ export function CasesPage() {
               style={{
                 width: '100%',
                 padding: '16px',
-                backgroundColor: 'rgba(255, 246, 228, 0.7)',
+                backgroundColor: dropResult.is_exclusive ? 'rgba(245, 240, 255, 0.85)' : 'rgba(255, 246, 228, 0.7)',
                 borderRadius: '12px',
-                border: '1.5px solid rgba(110, 85, 56, 0.35)',
+                border: dropResult.is_exclusive
+                  ? '2px solid #a78bfa'
+                  : '1.5px solid rgba(110, 85, 56, 0.35)',
+                boxShadow: dropResult.is_exclusive
+                  ? '0 0 16px rgba(124, 58, 237, 0.25)'
+                  : 'none',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -466,15 +481,24 @@ export function CasesPage() {
                 <>
                   <div
                     style={{
-                      width: '72px',
-                      height: '72px',
+                      width: '76px',
+                      height: '76px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      border: `2px solid ${THEME.RARITY[dropResult.rarity] || '#9e9e9e'}`,
-                      borderRadius: '10px',
+                      border: `2px solid ${
+                        dropResult.is_exclusive
+                          ? '#a78bfa'
+                          : THEME.RARITY[dropResult.rarity] || '#9e9e9e'
+                      }`,
+                      borderRadius: '12px',
                       padding: '4px',
-                      backgroundColor: 'rgba(43, 29, 18, 0.1)',
+                      backgroundColor: dropResult.is_exclusive
+                        ? 'rgba(124, 58, 237, 0.12)'
+                        : 'rgba(43, 29, 18, 0.1)',
+                      boxShadow: dropResult.is_exclusive
+                        ? '0 0 12px rgba(167, 139, 250, 0.6)'
+                        : 'none',
                     }}
                   >
                     <img
@@ -484,9 +508,21 @@ export function CasesPage() {
                       style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                     />
                   </div>
-                  <span style={{ fontFamily: 'var(--font-pixel)', fontSize: '17px', color: 'var(--ink)' }}>
+                  <span style={{ fontFamily: 'var(--font-pixel)', fontSize: '18px', color: 'var(--ink)' }}>
                     {dropResult.name}
                   </span>
+
+                  {/* Бейдж происхождения предмета (Эксклюзив ✨ / Стартовый ⭐) */}
+                  {(dropResult.is_exclusive || dropResult.is_starter) && (
+                    <div style={{ marginTop: '2px', marginBottom: '2px' }}>
+                      <ItemBadge
+                        isExclusive={dropResult.is_exclusive}
+                        isStarter={dropResult.is_starter}
+                        compact={false}
+                      />
+                    </div>
+                  )}
+
                   <span
                     style={{
                       fontSize: '11px',

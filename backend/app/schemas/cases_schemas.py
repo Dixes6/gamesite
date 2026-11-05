@@ -24,10 +24,10 @@ class SGetCasesResponse(BaseModel):
 
 class SOpenCaseResponse(BaseModel):
     item_type: str
-    value: int | None
-    shop_item_id: int | None
-    name: str | None
-    image: str | None
-    type: str | None
-    rarity: str | None
-    is_exclusive: bool | None
+    value: int | None = None
+    shop_item_id: int | None = None
+    name: str | None = None
+    image: str | None = None
+    type: str | None = None
+    rarity: str | None = None
+    is_exclusive: bool | None = None
