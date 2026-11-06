@@ -1,0 +1,25 @@
+# Web Framework & Server
+fastapi==0.141.1
+uvicorn[standard]==0.54.0
+
+# Database & Migrations
+sqlalchemy==2.0.54
+asyncpg==0.31.0
+psycopg2-binary==2.9.13
+alembic==1.20.0
+
+# Background Tasks & Scheduling
+apscheduler==3.11.3
+
+# Configuration & Validation
+pydantic==2.13.5
+pydantic-settings==2.15.0
+environs==15.2.0
+
+# Authentication & Security
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
+python-jose[cryptography]==3.5.0
+
+# Code Quality & Formatting
+ruff==0.17.3

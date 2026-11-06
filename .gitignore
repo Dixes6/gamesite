@@ -2,6 +2,8 @@
 /.venv
 /.idea
 __pycache__
+*.py[cod]
+.ruff_cache/
 backend/.env
 lint.bat
 
@@ -16,3 +18,8 @@ yarn-error.log*
 
 frontend/.env.local
 frontend/.env.*.local
+
+# Docs & Screenshots (переопределение глобального игнорирования /docs)
+!/docs/
+/docs/*
+!/docs/screenshots/
