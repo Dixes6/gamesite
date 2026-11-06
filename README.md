@@ -233,3 +233,6 @@ npm install
 **Данил** — Начинающий Python Backend-разработчик
 - **Telegram:** [@dixesss](https://t.me/dixesss) 
 
+- **AI-ассистент:** [Google Antigravity](https://deepmind.google/) —
+   архитектурные консультации, код-ревью и генерация фронтенд-компонентов по ТЗ.
+
