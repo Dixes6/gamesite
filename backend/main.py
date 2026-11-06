@@ -1,14 +1,17 @@
 from pathlib import Path
+import logging
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from zoneinfo import ZoneInfo
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.service.task_service import generate_tasks
 from app.db.session import async_session
+from app.core.config import settings
 
 from app.api.v1.routers.users_router import router as user_router
 from app.api.v1.routers.games_router import router as game_router
@@ -77,6 +80,29 @@ app.include_router(game_router)
 app.include_router(case_router)
 app.include_router(shop_router)
 app.include_router(task_router)
+
+logging.basicConfig(
+    level=logging.getLevelName(level=settings.LOG.level), format=settings.LOG.format
+)
+logger = logging.getLogger(__name__)
+
+logger.info("Starting API")
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    level = logging.WARNING if exc.status_code < 500 else logging.ERROR
+    logger.log(
+        level,
+        "HTTPException: %s %s -> %s %s",
+        request.method,
+        request.url.path,
+        exc.status_code,
+        exc.detail,
+    )
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+    )
 
 BASE_DIR = Path(__file__).resolve().parent
 app.mount("/image", StaticFiles(directory=BASE_DIR / "app" / "image"), name="images")

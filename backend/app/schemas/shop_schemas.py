@@ -9,6 +9,7 @@ class SShopResponse(BaseModel):
     image: str
     type: str
     price: int | None = None
+    unlock_level: int | None = None
     is_exclusive: bool
     is_starter: bool
     rarity: str
