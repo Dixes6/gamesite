@@ -23,3 +23,5 @@ python-jose[cryptography]==3.5.0
 
 # Code Quality & Formatting
 ruff==0.17.3
+
+python-multipart
