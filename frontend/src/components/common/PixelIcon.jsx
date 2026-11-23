@@ -223,6 +223,29 @@ export function PixelIcon({ name, size = 24, color, className = '' }) {
         </svg>
       );
 
+    case 'flame':
+      return (
+        <svg
+          width={s}
+          height={s}
+          viewBox="0 0 16 16"
+          fill="none"
+          shapeRendering="crispEdges"
+          className={className}
+        >
+          {/* Контур огонька */}
+          <path d="M7 1h2v3h2v2h1v4h-1v2h-1v2H9v1H7v-1H5v-2H4v-2H3V6h1V4h2V1h1z" fill="#3a1005" />
+          {/* Красная основа */}
+          <path d="M7 2h2v3h1v2h1v3h-1v2h-1v1H7v-1H6V9H5V6h1V5h1V2z" fill="#c4302b" />
+          {/* Оранжевое тело */}
+          <path d="M7 4h1v2h2v3h-1v2H7v-1H6V8h1V6H6V5h1V4z" fill="#e67e22" />
+          {/* Желтое пламя */}
+          <path d="M7 7h1v2h1v1H8v1H7V9H6V8h1V7z" fill="#f1c40f" />
+          {/* Искра */}
+          <rect x="7" y="8" width="1" height="1" fill="#ffffff" />
+        </svg>
+      );
+
     default:
       return null;
   }

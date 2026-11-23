@@ -1,23 +1,22 @@
-from fastapi import APIRouter, status, Depends
-
+from app.api.v1.deps import get_current_user
 from app.db.models.user import UsersModel
+from app.db.session import SessionDep
 from app.schemas.users_schemas import (
-    SUserResponse,
-    SUserInventoryResponse,
     SRewardStreakResponse,
     SUserAvatarOrFrameResponse,
+    SUserInventoryResponse,
+    SUserResponse,
 )
-from app.db.session import SessionDep
-from app.api.v1.deps import get_current_user
+from app.service.streak_service import claim_reward, streak_status
 from app.service.user_service import (
-    xp_to_next_level,
-    get_inventory_user_service,
-    get_avatar_or_frame_user_service,
     change_avatar_service,
     change_frame_service,
+    get_avatar_or_frame_user_service,
     get_image,
+    get_inventory_user_service,
+    xp_to_next_level,
 )
-from app.service.streak_service import streak_status, claim_reward
+from fastapi import APIRouter, Depends, status
 
 router = APIRouter(prefix="/main", tags=["Главное меню"])
 
@@ -38,7 +37,9 @@ async def user(
         xp_to_next_level=await xp_to_next_level(user.id, session=session),
         rubies=user.rubies,
         current_streak=streak["current_streak"],
+        best_streak=streak["best_streak"],
         last_claim_date=streak["last_claim_date"],
+        can_claim_streak=streak["can_claim"],
     )
 
 

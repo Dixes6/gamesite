@@ -97,6 +97,20 @@ export async function getCurrentUserProfile(token) {
 }
 
 /**
+ * Забрать ежедневную награду за стрик
+ * Backend: POST /main/streak_claim_reward
+ */
+export async function claimStreakReward(token) {
+  const res = await fetch(`${API_BASE}/main/streak_claim_reward`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return handleResponse(res);
+}
+
+/**
  * Получение инвентаря пользователя
  */
 export async function getUserInventory(token) {

@@ -1,5 +1,6 @@
-from pydantic import BaseModel, ConfigDict
 from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict
 
 
 class SUserRegister(BaseModel):
@@ -32,7 +33,9 @@ class SUserResponse(BaseModel):
     xp_to_next_level: int
     rubies: int
     current_streak: int
+    best_streak: int = 0
     last_claim_date: datetime
+    can_claim_streak: bool = False
 
 
 class SUserInventoryResponse(BaseModel):
@@ -53,6 +56,8 @@ class SUserInventoryResponse(BaseModel):
 
 class SRewardStreakResponse(BaseModel):
     amount_rubies: int
+    current_streak: int = 1
+    best_streak: int = 1
 
 
 class SUserAvatarOrFrameResponse(BaseModel):

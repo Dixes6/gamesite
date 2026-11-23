@@ -4,6 +4,7 @@ import { AvatarDisplay } from '../common/AvatarDisplay';
 import { ProgressBar, formatNumber } from '../common/ProgressBar';
 import { RubyBadge } from '../common/RubyBadge';
 import { PanelButton } from '../common/PanelButton';
+import { StreakCard } from './StreakCard';
 import { PixelLandscape } from '../common/PixelLandscape';
 import { TEXT } from '../../constants/text';
 
@@ -143,37 +144,7 @@ export function ProfilePage({ onOpenInventory, onOpenTasks }) {
         <RubyBadge amount={user.rubies} />
       </div>
 
-      {/* Стрик ежедневного захода (если активен) */}
-      {user.current_streak > 0 && (
-        <div
-          style={{
-            marginBottom: '16px',
-            padding: '8px 12px',
-            backgroundColor: 'rgba(111, 143, 58, 0.15)',
-            border: '1.5px dashed var(--accent-green)',
-            borderRadius: '10px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            fontSize: '12px',
-            fontFamily: 'var(--font-body)',
-            color: 'var(--ink)',
-          }}
-        >
-          <span style={{ fontWeight: 600 }}>🔥 {TEXT.PROFILE.STREAK}:</span>
-          <span
-            style={{
-              fontFamily: 'var(--font-pixel)',
-              fontSize: '14px',
-              color: 'var(--panel-olive)',
-            }}
-          >
-            {user.current_streak} {TEXT.PROFILE.DAYS}
-          </span>
-        </div>
-      )}
-
-      {/* Основные кнопки-панели (Инвентарь, Активные задания) — Статистика удалена */}
+      {/* Основные кнопки-панели (Инвентарь, Активные задания) + Ежедневный стрик */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
         <PanelButton
           icon="chest"
@@ -188,6 +159,9 @@ export function ProfilePage({ onOpenInventory, onOpenTasks }) {
           subtitle={TEXT.PROFILE.TASKS_SUB}
           onClick={onOpenTasks}
         />
+
+        {/* Интерактивное поле стрика */}
+        <StreakCard />
       </div>
 
       {/* Вторичная кнопка: Выход из аккаунта */}
