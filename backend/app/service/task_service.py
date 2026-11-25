@@ -3,6 +3,7 @@ from sqlalchemy import select, and_, case, insert, delete, join
 from sqlalchemy.orm import selectinload, joinedload
 from fastapi import status, HTTPException
 import random
+from zoneinfo import ZoneInfo
 
 from app.db.models import InventoryModel
 from app.db.session import SessionDep
@@ -19,7 +20,7 @@ async def get_user_task_service(user_id: int, session: SessionDep) -> dict:
             status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден"
         )
 
-    now = datetime.now()
+    now = datetime.now(ZoneInfo("Europe/Moscow")).replace(tzinfo=None)
     start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
     start_of_week = start_of_day - timedelta(days=start_of_day.weekday())
     start_of_month = start_of_day.replace(day=1)
@@ -124,7 +125,7 @@ async def register_task_event(
             status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден"
         )
 
-    now = datetime.now()
+    now = datetime.now(ZoneInfo("Europe/Moscow")).replace(tzinfo=None)
 
     start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
     start_of_week = start_of_day - timedelta(days=start_of_day.weekday())
