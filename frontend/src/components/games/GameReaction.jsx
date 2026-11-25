@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { submitGameResult } from '../../api/client';
 import { PixelIcon } from '../common/PixelIcon';
+import { ExitConfirmModal } from './ExitConfirmModal';
+import { useGameExitGuard } from './useGameExitGuard';
 import { TEXT } from '../../constants/text';
 
 // Древние руны для ячеек поля (до 16 рун для сетки 4х4)
@@ -37,7 +39,7 @@ function calculateReactionReward(completed) {
   return 10 * completed * (completed + 1);
 }
 
-export function GameReaction({ onExit }) {
+export function GameReaction({ onExit, registerNavigationGuard, onNavigateTab }) {
   const { token, refreshUser } = useAuth();
 
   const [level, setLevel] = useState(1);
@@ -54,7 +56,6 @@ export function GameReaction({ onExit }) {
   const [litTile, setLitTile] = useState(null);
   const [wrongTile, setWrongTile] = useState(null);
 
-  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [resultModal, setResultModal] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -67,6 +68,12 @@ export function GameReaction({ onExit }) {
   const completedLevelsRef = useRef(0);
   completedLevelsRef.current = completedLevels;
 
+  const phaseRef = useRef('IDLE');
+  phaseRef.current = phase;
+
+  const sequenceRef = useRef([]);
+  sequenceRef.current = sequence;
+
   const timeoutsRef = useRef([]);
 
   // Очистка всех запланированных таймаутов
@@ -78,6 +85,109 @@ export function GameReaction({ onExit }) {
   useEffect(() => {
     return () => clearAllTimeouts();
   }, []);
+
+  // Воспроизведение последовательности для игрока
+  const playSequence = useCallback(
+    (seq, currentLvl) => {
+      clearAllTimeouts();
+      setPhase('SHOWING');
+      phaseRef.current = 'SHOWING';
+      setLitTile(null);
+      setWrongTile(null);
+
+      const { on, pause } = getFlashTiming(currentLvl);
+      let cumulativeTime = 400; // небольшая начальная пауза
+
+      seq.forEach((tileIndex) => {
+        // Включение плитки
+        const tOn = setTimeout(() => {
+          if (hasFinishedRef.current) return;
+          setLitTile(tileIndex);
+        }, cumulativeTime);
+        timeoutsRef.current.push(tOn);
+
+        cumulativeTime += on;
+
+        // Выключение плитки
+        const tOff = setTimeout(() => {
+          if (hasFinishedRef.current) return;
+          setLitTile(null);
+        }, cumulativeTime);
+        timeoutsRef.current.push(tOff);
+
+        cumulativeTime += pause;
+      });
+
+      // Переход к ходу игрока
+      const tEnd = setTimeout(() => {
+        if (hasFinishedRef.current) return;
+        setPhase('PLAYER');
+        phaseRef.current = 'PLAYER';
+        setPlayerStep(0);
+      }, cumulativeTime);
+      timeoutsRef.current.push(tEnd);
+    },
+    []
+  );
+
+  // Запуск очередного уровня
+  const startLevel = useCallback(
+    (targetLevel) => {
+      const gridSize = getGridSize(targetLevel);
+      const totalTiles = gridSize * gridSize;
+      const length = getSequenceLength(targetLevel);
+
+      // Генерация случайной цепочки плиток
+      const newSeq = [];
+      for (let i = 0; i < length; i++) {
+        newSeq.push(Math.floor(Math.random() * totalTiles));
+      }
+
+      setSequence(newSeq);
+      sequenceRef.current = newSeq;
+      setPlayerStep(0);
+      playSequence(newSeq, targetLevel);
+    },
+    [playSequence]
+  );
+
+  // Пауза/возобновление таймеров при открытии модального окна выхода
+  const handleBeforePause = useCallback(() => {
+    if (phaseRef.current === 'SHOWING' || phaseRef.current === 'CORRECT') {
+      clearAllTimeouts();
+      setLitTile(null);
+    }
+  }, []);
+
+  const handleAfterResume = useCallback(() => {
+    if (hasFinishedRef.current) return;
+    if (phaseRef.current === 'SHOWING') {
+      playSequence(sequenceRef.current, levelRef.current);
+    } else if (phaseRef.current === 'CORRECT') {
+      const nextLevel = levelRef.current + 1;
+      setLevel(nextLevel);
+      levelRef.current = nextLevel;
+      startLevel(nextLevel);
+    }
+  }, [playSequence, startLevel]);
+
+  const {
+    showExitConfirm,
+    setShowExitConfirm,
+    requestExit,
+    cancelExit,
+    resetExitGuard,
+    performExit,
+    getResultExitLabel,
+  } = useGameExitGuard({
+    isFinished: Boolean(resultModal),
+    submitting,
+    onExit,
+    registerNavigationGuard,
+    onNavigateTab,
+    onBeforePause: handleBeforePause,
+    onAfterResume: handleAfterResume,
+  });
 
   // Завершение игры и сохранение на бэкенд
   const handleFinish = useCallback(
@@ -119,69 +229,7 @@ export function GameReaction({ onExit }) {
       });
       setShowExitConfirm(false);
     },
-    [token, refreshUser]
-  );
-
-  // Воспроизведение последовательности для игрока
-  const playSequence = useCallback(
-    (seq, currentLvl) => {
-      clearAllTimeouts();
-      setPhase('SHOWING');
-      setLitTile(null);
-      setWrongTile(null);
-
-      const { on, pause } = getFlashTiming(currentLvl);
-      let cumulativeTime = 400; // небольшая начальная пауза
-
-      seq.forEach((tileIndex, i) => {
-        // Включение плитки
-        const tOn = setTimeout(() => {
-          if (hasFinishedRef.current) return;
-          setLitTile(tileIndex);
-        }, cumulativeTime);
-        timeoutsRef.current.push(tOn);
-
-        cumulativeTime += on;
-
-        // Выключение плитки
-        const tOff = setTimeout(() => {
-          if (hasFinishedRef.current) return;
-          setLitTile(null);
-        }, cumulativeTime);
-        timeoutsRef.current.push(tOff);
-
-        cumulativeTime += pause;
-      });
-
-      // Переход к ходу игрока
-      const tEnd = setTimeout(() => {
-        if (hasFinishedRef.current) return;
-        setPhase('PLAYER');
-        setPlayerStep(0);
-      }, cumulativeTime);
-      timeoutsRef.current.push(tEnd);
-    },
-    []
-  );
-
-  // Запуск очередного уровня
-  const startLevel = useCallback(
-    (targetLevel) => {
-      const gridSize = getGridSize(targetLevel);
-      const totalTiles = gridSize * gridSize;
-      const length = getSequenceLength(targetLevel);
-
-      // Генерация случайной цепочки плиток
-      const newSeq = [];
-      for (let i = 0; i < length; i++) {
-        newSeq.push(Math.floor(Math.random() * totalTiles));
-      }
-
-      setSequence(newSeq);
-      setPlayerStep(0);
-      playSequence(newSeq, targetLevel);
-    },
-    [playSequence]
+    [token, refreshUser, setShowExitConfirm]
   );
 
   // Нажатие кнопки «Начать раунд»
@@ -214,6 +262,7 @@ export function GameReaction({ onExit }) {
       // Цепочка уровня завершена полностью!
       if (nextStep >= sequence.length) {
         setPhase('CORRECT');
+        phaseRef.current = 'CORRECT';
         const nextCompleted = completedLevels + 1;
         setCompletedLevels(nextCompleted);
         completedLevelsRef.current = nextCompleted;
@@ -231,6 +280,7 @@ export function GameReaction({ onExit }) {
     } else {
       // Ошибка!
       setPhase('WRONG');
+      phaseRef.current = 'WRONG';
       setWrongTile(tileIndex);
 
       const tWrong = setTimeout(() => {
@@ -249,13 +299,15 @@ export function GameReaction({ onExit }) {
     levelRef.current = 1;
     completedLevelsRef.current = 0;
     setSequence([]);
+    sequenceRef.current = [];
     setPlayerStep(0);
     setLitTile(null);
     setWrongTile(null);
     setPhase('IDLE');
-    setShowExitConfirm(false);
+    phaseRef.current = 'IDLE';
+    resetExitGuard();
     setResultModal(null);
-  }, []);
+  }, [resetExitGuard]);
 
   const currentGridSize = getGridSize(level);
   const totalTilesCount = currentGridSize * currentGridSize;
@@ -300,7 +352,7 @@ export function GameReaction({ onExit }) {
         {/* Кнопка выхода */}
         <button
           type="button"
-          onClick={() => setShowExitConfirm(true)}
+          onClick={() => requestExit({ type: 'menu' })}
           style={{
             padding: '7px 12px',
             backgroundColor: 'rgba(196, 48, 43, 0.12)',
@@ -545,84 +597,17 @@ export function GameReaction({ onExit }) {
       </div>
 
       {/* Модальное окно подтверждения выхода */}
-      {showExitConfirm && (
-        <div
-          onClick={() => setShowExitConfirm(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(18, 11, 7, 0.8)',
-            zIndex: 250,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px',
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              width: '100%',
-              maxWidth: '320px',
-              backgroundColor: 'var(--bg-parchment)',
-              border: '3px solid #573f27',
-              borderRadius: '16px',
-              padding: '22px 18px',
-              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.9)',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-            }}
-          >
-            <span style={{ fontSize: '32px' }}>🚪</span>
-            <h3 style={{ fontFamily: 'var(--font-pixel)', fontSize: '19px', color: 'var(--ink)' }}>
-              {TEXT.GAMES.REACTION.CONFIRM_EXIT_TITLE}
-            </h3>
-            <p style={{ fontSize: '12px', color: 'var(--ink-muted)', lineHeight: 1.4, fontFamily: 'var(--font-body)' }}>
-              {TEXT.GAMES.REACTION.CONFIRM_EXIT_TEXT}
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={() => handleFinish('exit')}
-                style={{
-                  padding: '11px',
-                  backgroundColor: 'var(--panel-olive)',
-                  color: 'var(--text-on-dark)',
-                  fontFamily: 'var(--font-pixel)',
-                  fontSize: '14px',
-                  borderRadius: '8px',
-                  border: '2px solid #283121',
-                  cursor: 'pointer',
-                }}
-              >
-                {submitting ? TEXT.GAMES.REACTION.SENDING_RESULT : TEXT.GAMES.REACTION.CONFIRM_EXIT}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setShowExitConfirm(false)}
-                style={{
-                  padding: '9px',
-                  backgroundColor: 'transparent',
-                  color: 'var(--ink-muted)',
-                  fontFamily: 'var(--font-body)',
-                  fontWeight: 600,
-                  fontSize: '13px',
-                  border: '1px solid rgba(110, 85, 56, 0.3)',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                }}
-              >
-                {TEXT.GAMES.REACTION.CONTINUE_PLAY}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ExitConfirmModal
+        isOpen={showExitConfirm}
+        title={TEXT.GAMES.REACTION.CONFIRM_EXIT_TITLE}
+        text={TEXT.GAMES.REACTION.CONFIRM_EXIT_TEXT}
+        confirmLabel={TEXT.GAMES.REACTION.CONFIRM_EXIT}
+        sendingLabel={TEXT.GAMES.REACTION.SENDING_RESULT}
+        continueLabel={TEXT.GAMES.REACTION.CONTINUE_PLAY}
+        submitting={submitting}
+        onConfirm={() => handleFinish('exit')}
+        onCancel={cancelExit}
+      />
 
       {/* Модальное окно итогов игры */}
       {resultModal && (
@@ -758,7 +743,7 @@ export function GameReaction({ onExit }) {
 
               <button
                 type="button"
-                onClick={onExit}
+                onClick={() => performExit()}
                 style={{
                   padding: '10px',
                   backgroundColor: 'transparent',
@@ -771,7 +756,7 @@ export function GameReaction({ onExit }) {
                   cursor: 'pointer',
                 }}
               >
-                {TEXT.GAMES.REACTION.TO_GAMES_MENU}
+                {getResultExitLabel(TEXT.GAMES.REACTION.TO_GAMES_MENU)}
               </button>
             </div>
           </div>

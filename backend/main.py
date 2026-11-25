@@ -67,12 +67,12 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(auth_router)
 app.include_router(user_router)
@@ -87,6 +87,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 logger.info("Starting API")
+
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
@@ -103,6 +104,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         status_code=exc.status_code,
         content={"detail": exc.detail},
     )
+
 
 BASE_DIR = Path(__file__).resolve().parent
 app.mount("/image", StaticFiles(directory=BASE_DIR / "app" / "image"), name="images")

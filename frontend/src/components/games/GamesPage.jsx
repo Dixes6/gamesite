@@ -11,7 +11,7 @@ import { TEXT } from '../../constants/text';
 // Строгий порядок отображения игр сверху вниз: 2048 -> clicker -> reaction
 const GAME_ORDER = { '2048': 0, 'clicker': 1, 'reaction': 2 };
 
-export function GamesPage() {
+export function GamesPage({ registerNavigationGuard, onNavigateTab }) {
   const { token, user } = useAuth();
 
   const [pageInfo, setPageInfo] = useState({
@@ -67,17 +67,35 @@ export function GamesPage() {
 
   // Запуск игры 2048
   if (activePlayingGame === '2048') {
-    return <Game2048 onExit={() => setActivePlayingGame(null)} />;
+    return (
+      <Game2048
+        onExit={() => setActivePlayingGame(null)}
+        registerNavigationGuard={registerNavigationGuard}
+        onNavigateTab={onNavigateTab}
+      />
+    );
   }
 
   // Запуск игры Кликер
   if (activePlayingGame === 'clicker') {
-    return <GameClicker onExit={() => setActivePlayingGame(null)} />;
+    return (
+      <GameClicker
+        onExit={() => setActivePlayingGame(null)}
+        registerNavigationGuard={registerNavigationGuard}
+        onNavigateTab={onNavigateTab}
+      />
+    );
   }
 
   // Запуск игры Тест реакции
   if (activePlayingGame === 'reaction') {
-    return <GameReaction onExit={() => setActivePlayingGame(null)} />;
+    return (
+      <GameReaction
+        onExit={() => setActivePlayingGame(null)}
+        registerNavigationGuard={registerNavigationGuard}
+        onNavigateTab={onNavigateTab}
+      />
+    );
   }
 
   // Активные игры, отсортированные строго: 2048 -> clicker -> reaction

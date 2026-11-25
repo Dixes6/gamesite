@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { submitGameResult } from '../../api/client';
 import { PixelIcon } from '../common/PixelIcon';
+import { ExitConfirmModal } from './ExitConfirmModal';
+import { useGameExitGuard } from './useGameExitGuard';
 import { TEXT } from '../../constants/text';
 
 // Палитра градиентов для обычных сфер
@@ -20,7 +22,7 @@ const GOLDEN_COLOR = {
   shadow: 'rgba(255, 212, 59, 0.95)',
 };
 
-export function GameClicker({ onExit }) {
+export function GameClicker({ onExit, registerNavigationGuard, onNavigateTab }) {
   const { token, refreshUser } = useAuth();
 
   const [score, setScore] = useState(0);
@@ -28,9 +30,24 @@ export function GameClicker({ onExit }) {
   const [targets, setTargets] = useState([]);
   const [floatingTexts, setFloatingTexts] = useState([]);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [resultModal, setResultModal] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const {
+    showExitConfirm,
+    setShowExitConfirm,
+    requestExit,
+    cancelExit,
+    resetExitGuard,
+    performExit,
+    getResultExitLabel,
+  } = useGameExitGuard({
+    isFinished: Boolean(resultModal),
+    submitting,
+    onExit,
+    registerNavigationGuard,
+    onNavigateTab,
+  });
 
   // Защитный флаг от повторного начисления наград
   const hasFinishedRef = useRef(false);
@@ -257,10 +274,10 @@ export function GameClicker({ onExit }) {
     setTargets([]);
     setFloatingTexts([]);
     setIsPlaying(true);
-    setShowExitConfirm(false);
+    resetExitGuard();
     setResultModal(null);
     setTimeout(spawnNewTarget, 200);
-  }, [spawnNewTarget]);
+  }, [spawnNewTarget, resetExitGuard]);
 
   return (
     <div
@@ -320,7 +337,7 @@ export function GameClicker({ onExit }) {
         {/* Кнопка выхода */}
         <button
           type="button"
-          onClick={() => setShowExitConfirm(true)}
+          onClick={() => requestExit({ type: 'menu' })}
           style={{
             padding: '7px 12px',
             backgroundColor: 'rgba(196, 48, 43, 0.12)',
@@ -506,84 +523,17 @@ export function GameClicker({ onExit }) {
       </div>
 
       {/* Модальное окно подтверждения выхода */}
-      {showExitConfirm && (
-        <div
-          onClick={() => setShowExitConfirm(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(18, 11, 7, 0.8)',
-            zIndex: 250,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '20px',
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              width: '100%',
-              maxWidth: '320px',
-              backgroundColor: 'var(--bg-parchment)',
-              border: '3px solid #573f27',
-              borderRadius: '16px',
-              padding: '22px 18px',
-              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.9)',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-            }}
-          >
-            <span style={{ fontSize: '32px' }}>🚪</span>
-            <h3 style={{ fontFamily: 'var(--font-pixel)', fontSize: '19px', color: 'var(--ink)' }}>
-              {TEXT.GAMES.CLICKER.CONFIRM_EXIT_TITLE}
-            </h3>
-            <p style={{ fontSize: '12px', color: 'var(--ink-muted)', lineHeight: 1.4, fontFamily: 'var(--font-body)' }}>
-              {TEXT.GAMES.CLICKER.CONFIRM_EXIT_TEXT}
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={() => handleFinish('exit')}
-                style={{
-                  padding: '11px',
-                  backgroundColor: 'var(--panel-olive)',
-                  color: 'var(--text-on-dark)',
-                  fontFamily: 'var(--font-pixel)',
-                  fontSize: '14px',
-                  borderRadius: '8px',
-                  border: '2px solid #283121',
-                  cursor: 'pointer',
-                }}
-              >
-                {submitting ? TEXT.GAMES.CLICKER.SENDING_RESULT : TEXT.GAMES.CLICKER.CONFIRM_EXIT}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setShowExitConfirm(false)}
-                style={{
-                  padding: '9px',
-                  backgroundColor: 'transparent',
-                  color: 'var(--ink-muted)',
-                  fontFamily: 'var(--font-body)',
-                  fontWeight: 600,
-                  fontSize: '13px',
-                  border: '1px solid rgba(110, 85, 56, 0.3)',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                }}
-              >
-                {TEXT.GAMES.CLICKER.CONTINUE_PLAY}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ExitConfirmModal
+        isOpen={showExitConfirm}
+        title={TEXT.GAMES.CLICKER.CONFIRM_EXIT_TITLE}
+        text={TEXT.GAMES.CLICKER.CONFIRM_EXIT_TEXT}
+        confirmLabel={TEXT.GAMES.CLICKER.CONFIRM_EXIT}
+        sendingLabel={TEXT.GAMES.CLICKER.SENDING_RESULT}
+        continueLabel={TEXT.GAMES.CLICKER.CONTINUE_PLAY}
+        submitting={submitting}
+        onConfirm={() => handleFinish('exit')}
+        onCancel={cancelExit}
+      />
 
       {/* Модальное окно итогов игры */}
       {resultModal && (
@@ -716,7 +666,7 @@ export function GameClicker({ onExit }) {
 
               <button
                 type="button"
-                onClick={onExit}
+                onClick={() => performExit()}
                 style={{
                   padding: '10px',
                   backgroundColor: 'transparent',
@@ -729,7 +679,7 @@ export function GameClicker({ onExit }) {
                   cursor: 'pointer',
                 }}
               >
-                {TEXT.GAMES.CLICKER.TO_GAMES_MENU}
+                {getResultExitLabel(TEXT.GAMES.CLICKER.TO_GAMES_MENU)}
               </button>
             </div>
           </div>

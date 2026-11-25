@@ -165,6 +165,8 @@ export const TEXT = {
     IN_DEVELOPMENT: 'В разработке',
     SOON: 'Скоро',
     LOADING: 'Готовим игровые столы...',
+    GO_TO_TAB_PREFIX: 'Перейти в «',
+    GO_TO_TAB_SUFFIX: '»',
     GAME_2048: {
       TITLE: '2048',
       SHORT_DESC: 'Соединяйте одинаковые рунические плитки и соберите легендарный артефакт 2048!',

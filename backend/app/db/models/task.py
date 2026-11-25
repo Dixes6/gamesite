@@ -51,7 +51,10 @@ class UserTaskModel(Model):
     progress: Mapped[int] = mapped_column(nullable=False)
     is_completed: Mapped[bool] = mapped_column(nullable=False)
     reward_claimed: Mapped[bool] = mapped_column(nullable=False)
-    period_start: Mapped[datetime] = mapped_column(nullable=False, default=datetime.now(ZoneInfo("Europe/Moscow")).replace(tzinfo=None))
+    period_start: Mapped[datetime] = mapped_column(
+        nullable=False,
+        default=datetime.now(ZoneInfo("Europe/Moscow")).replace(tzinfo=None),
+    )
 
     task_template: Mapped["TaskTemplateModel"] = relationship(
         back_populates="user_tasks"
@@ -69,4 +72,7 @@ class CurrentTasksModel(Model):
     progress: Mapped[int] = mapped_column(nullable=False)
     is_completed: Mapped[bool] = mapped_column(nullable=False)
     reward_claimed: Mapped[bool] = mapped_column(nullable=False)
-    period_start: Mapped[datetime] = mapped_column(nullable=False, default=datetime.now(ZoneInfo("Europe/Moscow")).replace(tzinfo=None))
+    period_start: Mapped[datetime] = mapped_column(
+        nullable=False,
+        default=datetime.now(ZoneInfo("Europe/Moscow")).replace(tzinfo=None),
+    )

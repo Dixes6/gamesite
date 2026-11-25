@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { useAuth } from './context/AuthContext';
 import { AuthPage } from './components/auth/AuthPage';
 import { ProfilePage } from './components/profile/ProfilePage';
@@ -14,6 +14,19 @@ export function App() {
   const { isAuthenticated, loading } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [profileSubView, setProfileSubView] = useState('main'); // 'main', 'inventory', 'tasks'
+  const navigationGuardRef = useRef(null);
+
+  const registerNavigationGuard = useCallback((guardFn) => {
+    navigationGuardRef.current = guardFn;
+  }, []);
+
+  const navigateToTab = useCallback((tabId) => {
+    setActiveTab(tabId);
+    if (tabId === 'profile') {
+      // При клике на вкладку «Профиль» возвращаем на главный экран профиля
+      setProfileSubView('main');
+    }
+  }, []);
 
   // Индикатор первой проверки токена
   if (loading) {
@@ -61,13 +74,12 @@ export function App() {
     );
   }
 
-  // Переключение вкладок нижней навигации
+  // Переключение вкладок нижней навигации (с проверкой активного перехватчика, например, из игры)
   const handleTabChange = (tabId) => {
-    setActiveTab(tabId);
-    if (tabId === 'profile') {
-      // При клике на вкладку «Профиль» возвращаем на главный экран профиля
-      setProfileSubView('main');
+    if (navigationGuardRef.current && !navigationGuardRef.current(tabId)) {
+      return;
     }
+    navigateToTab(tabId);
   };
 
   // Отрисовка контента активного раздела
@@ -92,7 +104,12 @@ export function App() {
     }
 
     if (activeTab === 'games') {
-      return <GamesPage />;
+      return (
+        <GamesPage
+          registerNavigationGuard={registerNavigationGuard}
+          onNavigateTab={navigateToTab}
+        />
+      );
     }
 
     if (activeTab === 'shop') {
